@@ -1,9 +1,10 @@
 package com.ecole._2.controller;
 
-import com.ecole._2.models.TokenResponse;
 import com.ecole._2.models.User;
 import com.ecole._2.services.CertificateService;
 import jakarta.servlet.http.HttpSession;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -19,14 +20,23 @@ import java.util.Map;
 
 @Controller
 public class CertificateController {
-    
+
+    private static final Logger logger = LoggerFactory.getLogger(CertificateController.class);
+
     @Autowired
     private CertificateService certificateService;
-    
+
+    /**
+     * Endpoint pour générer le certificat.
+     * NOTE: 'lang' est optional pour éviter l'exception Spring si quelqu'un appelle l'URL
+     *       directement. Nous faisons ensuite une validation explicite et renvoyons une
+     *       erreur 400 si la langue est absente ou invalide.
+     */
     @GetMapping("/certificate-generator")
     public ResponseEntity<?> getCertificate(
             @RequestParam("login") String login,
-            @RequestParam(value = "signer_par", defaultValue = "None") String signerPar,
+            @RequestParam(value = "signer_par", required = false, defaultValue = "Aucune") String signerPar,
+            @RequestParam(value = "lang", required = false) String lang,
             HttpSession session,
             Model model
     ) {
@@ -36,74 +46,99 @@ public class CertificateController {
                 Map<String, String> error = new HashMap<>();
                 error.put("error", "Session expired. Please log in again.");
                 return ResponseEntity.status(401)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(error);
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(error);
             }
-            
-            if (!signerPar.equalsIgnoreCase("None") &&
-                !signerPar.equalsIgnoreCase("Director") &&
-                !signerPar.equalsIgnoreCase("Assistant")) {
-                signerPar = "None";
-            }
-            
+
+            // Si l'utilisateur n'est pas admin, on force le login de session (sécurité)
             if (!"admin".equals(session.getAttribute("kind"))) {
                 login = user.getLogin();
             }
-            
+
             if (login == null || login.trim().isEmpty()) {
                 Map<String, String> error = new HashMap<>();
                 error.put("error", "Login is required to generate the certificate.");
                 return ResponseEntity.status(400)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(error);
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(error);
             }
-            
-            Resource pdf = certificateService.generateCertificate(login, signerPar);
-            
+
+
+             System.out.println("langue choisi: "+ lang);
+            // Validation/langue : on exige explicitement "fr" ou "en"
+            if (lang == null || (!"fr".equalsIgnoreCase(lang) && !"en".equalsIgnoreCase(lang))) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "Invalid or missing 'lang' parameter. Use 'fr' or 'en'.");
+                return ResponseEntity.status(400)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(error);
+            }
+            String langNormalized = lang.toLowerCase();
+
+            // Normalisation signer_par : accepte valeurs FR ou EN envoyées par le formulaire
+            String signerNormalized = "Aucune"; // valeur canonique par défaut
+            if (signerPar != null) {
+                String s = signerPar.trim();
+                if (s.equalsIgnoreCase("directeur") || s.equalsIgnoreCase("director")) {
+                    signerNormalized = "Directeur";
+                } else if (s.equalsIgnoreCase("assistant") || s.equalsIgnoreCase("assistant")) {
+                    signerNormalized = "Assistant";
+                } else if (s.equalsIgnoreCase("aucune") || s.equalsIgnoreCase("none")) {
+                    signerNormalized = "Aucune";
+                } else {
+                    // si valeur inconnue, on ne plante pas : on remet Aucune
+                    signerNormalized = "Aucune";
+                }
+            }
+
+            logger.info("Génération certificat: login={}, signer_par={}, lang={}", login, signerNormalized, langNormalized);
+
+            Resource pdf = certificateService.generateCertificate(login, signerNormalized, langNormalized);
+
+            String filename = "school_certificate_" + login + "_" + langNormalized + ".pdf";
             return ResponseEntity.ok()
-                .contentType(MediaType.APPLICATION_PDF)
-                .header(HttpHeaders.CONTENT_DISPOSITION,
-                    "attachment; filename=\"school_certificate_" + login + ".pdf\"")
-                .body(pdf);
-                
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                    .body(pdf);
+
         } catch (IllegalArgumentException e) {
             Map<String, String> error = new HashMap<>();
             error.put("error", "Invalid parameter: " + e.getMessage());
             return ResponseEntity.status(400)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(error);
-                
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(error);
+
         } catch (RuntimeException e) {
+            logger.error("Runtime error during certificate generation", e);
             Map<String, String> error = new HashMap<>();
             error.put("error", "Error during generation: " + e.getMessage());
             return ResponseEntity.status(500)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(error);
-                
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(error);
+
         } catch (Exception e) {
+            logger.error("Internal error during certificate generation", e);
             Map<String, String> error = new HashMap<>();
             error.put("error", "Internal server error. Please try again later.");
             return ResponseEntity.status(500)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(error);
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(error);
         }
     }
-    
+
     @GetMapping("/certificate")
     public String auth(Model model, HttpSession session) {
         User userResponse = (User) session.getAttribute("userResponse");
-        
+
         if (userResponse == null) {
             return "redirect:/login";
         }
         model.addAttribute("userResponse", userResponse);
 
-        // model.addAttribute("kind", userResponse.getKind());
-        // session.setAttribute("kind", userResponse.getKind());
-
+        // For testing: force admin mode (si tu veux retirer ceci en prod)
         model.addAttribute("kind", "admin");
         session.setAttribute("kind", "admin");
-        
+
         return "certificat-page";
     }
 }

@@ -1,20 +1,36 @@
 <div th:fragment="certificat" class="contact-card">
     <form method="get" action="/certificate-generator">
+        <!-- Login input visible uniquement pour admin -->
         <input type="text" class="admin-input" name="login" th:if="${kind == 'admin'}" required>
         <input type="hidden" name="login" th:value="${userResponse.login}" th:unless="${kind == 'admin'}">
 
+        <!-- Sélection du signataire -->
         <div class="sel sel--black-panther">
             <select name="signer_par" id="signer_par" required>
-                <option value="Aucune">None</option>
-                <option value="Directeur">Director</option>
-                <option value="Assistant">Assistant</option>
+                <option value="aucune">None</option>
+                <option value="directeur">Director</option>
+                <option value="assistant">Assistant</option>
             </select>
         </div>
 
-        <button type="submit" class="codepen-button"><span>Generate Certificate</span></button>
+        <!-- Sélection de la langue -->
+        <div class="sel sel--black-panther">
+            <select name="lang" id="lang" required>
+                <option value="">-- Choose language --</option>
+                <option value="fr">French</option>
+                <option value="en">English</option>
+            </select>
+        </div>
+
+        <!-- Bouton de soumission -->
+        <button type="submit" class="codepen-button">
+            <span>Generate Certificate</span>
+        </button>
+
+        <!-- Loader -->
         <div id="loader" style="display:none; margin-top: 20px; text-align:center;">
             <div class="spinner"></div>
-            <div style="color:#00ffcc; margin-top:5px;">Géneration in Progress...</div>
+            <div style="color:#00ffcc; margin-top:5px;">Generation in Progress...</div>
         </div>
     </form>
 </div>
