@@ -79,9 +79,16 @@ public class CheckingController {
             User userResponse = (User) session.getAttribute("userResponse");
             if (tokenResponse == null || userResponse == null) return "redirect:/login";
 
+            // Validation des dates
             if (!isValidDateRange(startDate, endDate)) {
-                model.addAttribute("error", "Dates invalides. La date de fin doit être postérieure ou égale à la date de début.");
-                return "checking-admin"; // Retour au template correct
+                model.addAttribute("error", "Dates invalides. La date de début doit être antérieure ou égale à la date de fin.");
+                model.addAttribute("userResponse", userResponse);
+                model.addAttribute("kind", session.getAttribute("kind"));
+                model.addAttribute("startDate", startDate);
+                model.addAttribute("endDate", endDate);
+                model.addAttribute("pool", pool);
+                model.addAttribute("year", year);
+                return "checking-admin";
             }
 
             List<User> userList = (List<User>) session.getAttribute("userList");
@@ -177,8 +184,13 @@ public class CheckingController {
             if (tokenResponse == null || userResponse == null) return "redirect:/login";
 
             if (!isValidDateRange(startDate, endDate)) {
-                model.addAttribute("error", "Dates invalides.");
-                return "checking-user"; // Retour au template correct
+                model.addAttribute("error", "Dates invalides. La date de début doit être antérieure ou égale à la date de fin.");
+                model.addAttribute("userResponse", userResponse);
+                model.addAttribute("kind", session.getAttribute("kind"));
+                model.addAttribute("startDate", startDate);
+                model.addAttribute("endDate", endDate);
+                model.addAttribute("login", "");
+                return "checking-user";
             }
 
             UserLocationStat userStat;

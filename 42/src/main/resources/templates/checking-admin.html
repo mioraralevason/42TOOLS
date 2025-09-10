@@ -7,65 +7,18 @@
 
     <!-- CSS global -->
     <link rel="stylesheet" th:href="@{/css/home.css}">
+    <!-- Sidebar css -->
     <link rel="stylesheet" th:href="@{/css/sidebar.css}">
+    <!-- Checking css -->
     <link rel="stylesheet" th:href="@{/css/checking.css}">
+    <!-- Pagination css -->
+    <link rel="stylesheet" th:href="@{/css/pagination.css}">
+    <!-- Popup error css -->
+    <link rel="stylesheet" th:href="@{/css/popup-error.css}">
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
-    <!-- Pagination styles -->
-    <style>
-        .pagination {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-            padding: 20px;
-            background: rgba(0, 255, 204, 0.05);
-            border-left: 3px solid #00ffcc;
-            border-right: 3px solid #00ffcc;
-            border-bottom: 3px solid #00ffcc;
-            border-radius: 0 0 10px 10px;
-        }
-
-        .pagination-btn {
-            padding: 10px 15px;
-            background: rgba(0, 255, 204, 0.1);
-            border: 2px solid #00ffcc;
-            border-radius: 5px;
-            color: #00ffcc;
-            font-size: 14px;
-            font-weight: bold;
-            text-transform: uppercase;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .pagination-btn:hover:not(:disabled) {
-            background: linear-gradient(135deg, rgba(0, 255, 204, 0.2), rgba(0, 212, 170, 0.2));
-            transform: translateY(-2px);
-            box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
-        }
-
-        .pagination-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .pagination-btn.active {
-            background: linear-gradient(135deg, #00ffcc, #00d4aa);
-            color: #000;
-            border: 2px solid #00ffcc;
-        }
-
-        .pagination-btn i {
-            margin: 0 5px;
-        }
-
-        .page-number {
-            min-width: 40px;
-            text-align: center;
-        }
-    </style>
+    
 </head>
 <body>
 <div class="container">
@@ -204,6 +157,8 @@
             </div>
         </div>
     </main>
+    <!-- Popup d'erreur -->
+    <div th:replace="fragments/error :: error"></div>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -221,19 +176,6 @@ $(document).ready(function() {
         const startDate = $(this).find('input[name="startDate"]').val();
         const endDate = $(this).find('input[name="endDate"]').val();
         const button = $(this).find('button[type="submit"]');
-
-        if (!startDate || !endDate) {
-            alert('Dates are required');
-            e.preventDefault();
-            return;
-        }
-
-        if (new Date(endDate) < new Date(startDate)) {
-            alert('End date must be greater than or equal to start date');
-            e.preventDefault();
-            return;
-        }
-
         button.prop('disabled', true);
         $('#loader').show();
     });
@@ -338,6 +280,22 @@ for (let year = 2000; year <= 2030; year++) {
     }
     selectYear.appendChild(option);
 }
+
+// Gestion popup d’erreur
+document.addEventListener("DOMContentLoaded", function() {
+    const popup = document.getElementById("errorPopup");
+    if (popup) {
+        popup.style.display = "block";
+        popup.querySelector(".close").onclick = function() {
+            popup.style.display = "none";
+        };
+        window.onclick = function(event) {
+            if (event.target === popup) {
+                popup.style.display = "none";
+            }
+        };
+    }
+});
 </script>
 </body>
 </html>
