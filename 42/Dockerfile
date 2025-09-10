@@ -1,15 +1,18 @@
-# Étape 1 : Build avec Maven
+# Stage 1: Build
 FROM maven:3.9.2-eclipse-temurin-17 AS build
 WORKDIR /app
-COPY pom.xml .
-COPY src ./src
-RUN mvn clean package -DskipTests
+COPY pom.xml mvnw ./
+COPY .mvn .mvn
+COPY src src
+RUN ./mvnw clean package -DskipTests
 
-# Étape 2 : Exécuter avec JDK slim
+# Stage 2: Runtime
 FROM openjdk:17-jdk-slim
 WORKDIR /app
 COPY --from=build /app/target/stage-42-0.0.1-SNAPSHOT.jar app.jar
 
-ENV PORT=$PORT
-EXPOSE $PORT
-ENTRYPOINT ["java", "-jar", "app.jar", "--server.port=${PORT}"]
+# Render utilise la variable d'environnement PORT
+EXPOSE ${PORT:-9090}
+
+# Utiliser la variable PORT fournie par Render
+ENTRYPOINT ["sh", "-c", "java -Dserver.port=${PORT:-9090} -jar app.jar"]
