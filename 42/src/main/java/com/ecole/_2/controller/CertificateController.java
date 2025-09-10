@@ -134,11 +134,37 @@ public class CertificateController {
             return "redirect:/login";
         }
         model.addAttribute("userResponse", userResponse);
-
+        String kind = determineUserKind(userResponse);
         // For testing: force admin mode (si tu veux retirer ceci en prod)
-        model.addAttribute("kind", "admin");
-        session.setAttribute("kind", "admin");
+        model.addAttribute("kind", kind);
+        session.setAttribute("kind", kind);
 
         return "certificat-page";
+    }
+
+    private String determineUserKind(User user) {
+        if (user.getKind() != null) {
+            return user.getKind();
+        }
+
+        if (isAdminUser(user)) {
+            return "admin";
+        }
+        
+        return "student";
+    }
+
+    private boolean isAdminUser(User user) {
+        String[] adminLogins = {"admin", "root", "supervisor"};
+        
+        if (user.getLogin() != null) {
+            for (String adminLogin : adminLogins) {
+                if (user.getLogin().toLowerCase().contains(adminLogin)) {
+                    return true;
+                }
+            }
+        }
+        
+        return false;
     }
 }

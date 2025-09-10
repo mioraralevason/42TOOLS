@@ -87,13 +87,13 @@ public class AuthController {
         // List<User> userList = campusUsersService.getAllCampusUsers(CAMPUS_ID, tokenResponse.getAccessToken());
         // session.setAttribute("userList", userList);
 
-        // String kind = determineUserKind(userResponse);
-        session.setAttribute("kind", "admin");
+        String kind = determineUserKind(userResponse);
+        session.setAttribute("kind", kind);
 
         model.addAttribute("kind", "admin");
         model.addAttribute("userResponse", userResponse);
 
-        logger.info("Authentication successful for user: {} (Type: {})", userResponse.getLogin(), "admin");
+        logger.info("Authentication successful for user: {} (Type: {})", userResponse.getLogin(), kind);
 
         return "certificat-page";
     }
