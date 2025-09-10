@@ -50,7 +50,7 @@ public class CursusUserList {
                 .findFirst()
                 .orElse(null);
         if (result == null) {
-            throw new IllegalStateException("No CursusUser found with grade: " + grade);
+            throw new IllegalStateException("You are not a " + grade);
         }
         return result;
     }

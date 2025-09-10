@@ -1,8 +1,8 @@
 <div th:fragment="certificat" class="contact-card">
     <form method="get" action="/certificate-generator">
         <!-- Login input visible uniquement pour admin -->
-        <input type="text" class="admin-input" name="login" th:if="${kind == 'admin'}" required>
-        <input type="hidden" name="login" th:value="${userResponse.login}" th:unless="${kind == 'admin'}">
+        <input type="text" class="admin-input" name="login" th:if="${session.kind == 'admin'}" required>
+        <input type="hidden" name="login" th:value="${session.userResponse.login}" th:unless="${session.kind == 'admin'}">
 
         <!-- Sélection du signataire -->
         <div class="sel sel--black-panther">

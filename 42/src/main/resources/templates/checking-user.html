@@ -21,7 +21,7 @@
         <div th:fragment="checking-user" class="contact-card">
             <form id="checkingForm" method="post" action="/checkUser">
                 <div class="date-group">
-                    <div class="date-input-wrapper">
+                    <div th:if="${session.kind == 'admin'}" class="date-input-wrapper">
                         <label for="userId">Student Login</label>
                         <input type="text"
                                class="user-input date-input"
@@ -30,6 +30,12 @@
                                th:value="${login}"
                                required>
                     </div>
+                    <input type="hidden"
+                            class="user-input date-input"
+                            name="login"
+                            id="userId"
+                            th:value="${session.userResponse.login}"
+                            th:unless="${session.kind == 'admin'}">
                     <div class="date-input-wrapper">
                         <label for="startDate">Start Date</label>
                         <input type="date"

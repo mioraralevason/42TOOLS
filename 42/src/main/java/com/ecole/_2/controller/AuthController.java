@@ -87,10 +87,12 @@ public class AuthController {
         // List<User> userList = campusUsersService.getAllCampusUsers(CAMPUS_ID, tokenResponse.getAccessToken());
         // session.setAttribute("userList", userList);
 
-        String kind = determineUserKind(userResponse);
-        session.setAttribute("kind", kind);
+        // String kind = determineUserKind(userResponse);
+        String kind = "admin";
 
-        model.addAttribute("kind", "admin");
+        session.setAttribute("kind", kind);
+        
+        model.addAttribute("kind", kind);
         model.addAttribute("userResponse", userResponse);
 
         logger.info("Authentication successful for user: {} (Type: {})", userResponse.getLogin(), kind);
