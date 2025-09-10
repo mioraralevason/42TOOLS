@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checking Admin</title>
+
+    <!-- CSS global -->
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/checking.css}">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <!-- Pagination styles -->
+    <style>
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            padding: 20px;
+            background: rgba(0, 255, 204, 0.05);
+            border-left: 3px solid #00ffcc;
+            border-right: 3px solid #00ffcc;
+            border-bottom: 3px solid #00ffcc;
+            border-radius: 0 0 10px 10px;
+        }
+
+        .pagination-btn {
+            padding: 10px 15px;
+            background: rgba(0, 255, 204, 0.1);
+            border: 2px solid #00ffcc;
+            border-radius: 5px;
+            color: #00ffcc;
+            font-size: 14px;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            background: linear-gradient(135deg, rgba(0, 255, 204, 0.2), rgba(0, 212, 170, 0.2));
+            transform: translateY(-2px);
+            box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
+        }
+
+        .pagination-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination-btn.active {
+            background: linear-gradient(135deg, #00ffcc, #00d4aa);
+            color: #000;
+            border: 2px solid #00ffcc;
+        }
+
+        .pagination-btn i {
+            margin: 0 5px;
+        }
+
+        .page-number {
+            min-width: 40px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="hover-area"></div>
+    <div th:replace="fragments/sidebar :: sidebar"></div>
+
+    <main class="content">
+        <div th:replace="fragments/header :: header"></div>
+
+        <!-- Checking Admin Form and Results -->
+        <div th:fragment="checking-admin" class="contact-card">
+
+            <form id="checkingForm" method="post" action="/check">
+                <div class="date-group">
+                    <div class="date-input-wrapper">
+                        <label for="startDate">Start Date</label>
+                        <input type="date" class="admin-input date-input" name="startDate" id="startDate"
+                               th:value="${startDate}" required>
+                    </div>
+                    <div class="date-input-wrapper">
+                        <label for="endDate">End Date</label>
+                        <input type="date" class="admin-input date-input" name="endDate" id="endDate"
+                               th:value="${endDate}" required>
+                    </div>
+                </div>
+
+                <div class="sel sel--black-panther">
+                    <select name="pool" id="pool">
+                        <option value="">Select Pool Month</option>
+                        <option value="September" th:selected="${pool == 'September'}">September</option>
+                        <option value="October" th:selected="${pool == 'October'}">October</option>
+                        <option value="November" th:selected="${pool == 'November'}">November</option>
+                        <option value="December" th:selected="${pool == 'December'}">December</option>
+                        <option value="January" th:selected="${pool == 'January'}">January</option>
+                        <option value="February" th:selected="${pool == 'February'}">February</option>
+                        <option value="March" th:selected="${pool == 'March'}">March</option>
+                        <option value="April" th:selected="${pool == 'April'}">April</option>
+                        <option value="May" th:selected="${pool == 'May'}">May</option>
+                        <option value="June" th:selected="${pool == 'June'}">June</option>
+                        <option value="July" th:selected="${pool == 'July'}">July</option>
+                        <option value="August" th:selected="${pool == 'August'}">August</option>
+                    </select>
+                </div>
+
+                <div class="sel sel--black-panther">
+                    <select name="year" id="year">
+                        <option value="">Select Year</option>
+                    </select>
+                </div>
+
+                <div style="text-align: center; margin-top: 20px;">
+                    <button type="submit" class="codepen-button">
+                        <span><i class="fa fa-search"></i> Check Attendance</span>
+                    </button>
+                </div>
+
+                <div id="loader" style="display:none; margin-top: 20px; text-align:center;">
+                    <div class="spinner"></div>
+                    <div style="color:#00ffcc; margin-top:5px;">Verification in progress...</div>
+                </div>
+            </form>
+
+            <!-- Results Section -->
+            <div class="results-section" th:if="${searchPerformed}">
+                <div class="results-header">
+                    <h3><i class="fa fa-bar-chart"></i> Verification Results</h3>
+                </div>
+
+                <div class="stats-display">
+                    <div class="stat-card main-stat">
+                        <div class="stat-number" th:text="${dayCount}">0</div>
+                        <div class="stat-label">Present Students</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-info" th:text="${pool}">Pool</div>
+                        <div class="stat-label">Pool</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-info" th:text="${year}">Year</div>
+                        <div class="stat-label">Year</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-info" th:text="${startDate + ' - ' + endDate}">Period</div>
+                        <div class="stat-label">Date Range</div>
+                    </div>
+                </div>
+
+                 <div class="table-section" th:if="${userLocationStats != null and !#lists.isEmpty(userLocationStats)}">
+                    <div class="table-header">
+                        <h4><i class="fa fa-list"></i> Attendance Details</h4>
+                    </div>
+
+                    <div class="table-container">
+                        <table class="results-table" id="resultsTable">
+                            <thead>
+                                <tr>
+                                    <th><i class="fa fa-user"></i> Student Name</th>
+                                    <th><i class="fa fa-calendar"></i> Date</th>
+                                    <th><i class="fa fa-clock-o"></i> Duration</th>
+                                </tr>
+                            </thead>
+                            <tbody id="resultsTableBody">
+                                <tr th:each="stat : ${userLocationStats}">
+                                    <td class="login-cell" th:text="${stat.userName}">User Name</td>
+
+                                    <td class="date-cell">
+                                        <div th:if="${stat.stats != null and !#lists.isEmpty(stat.stats)}">
+                                            <div th:each="s : ${stat.stats}" th:text="${s.date}"></div>
+                                        </div>
+                                        <span th:unless="${stat.stats != null and !#lists.isEmpty(stat.stats)}">-</span>
+                                    </td>
+
+                                    <td>
+                                        <div th:if="${stat.stats != null and !#lists.isEmpty(stat.stats)}">
+                                            <div th:each="s : ${stat.stats}" th:text="${s.durationStr}"></div>
+                                        </div>
+                                        <span th:unless="${stat.stats != null and !#lists.isEmpty(stat.stats)}">-</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="pagination" id="pagination" style="display: none;">
+                        <button class="pagination-btn" id="prevPage" disabled><i class="fa fa-chevron-left"></i> Previous</button>
+                        
+                        <button class="pagination-btn" id="nextPage">Next <i class="fa fa-chevron-right"></i></button>
+                    </div>
+                </div>
+
+                <div class="no-results" th:if="${dayCount == 0}">
+                    <div class="no-results-icon">
+                        <i class="fa fa-info-circle"></i>
+                    </div>
+                    <p>No attendance found for the selected period.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+    const $sidebar = $('.sidebar');
+    const $hoverArea = $('.hover-area');
+
+    // Sidebar hover functionality
+    $hoverArea.on('mouseenter', function() { $sidebar.addClass('visible'); });
+    $sidebar.on('mouseleave', function() { $sidebar.removeClass('visible'); });
+
+    // Form validation
+    $('#checkingForm').on('submit', function(e) {
+        const startDate = $(this).find('input[name="startDate"]').val();
+        const endDate = $(this).find('input[name="endDate"]').val();
+        const button = $(this).find('button[type="submit"]');
+
+        if (!startDate || !endDate) {
+            alert('Dates are required');
+            e.preventDefault();
+            return;
+        }
+
+        if (new Date(endDate) < new Date(startDate)) {
+            alert('End date must be greater than or equal to start date');
+            e.preventDefault();
+            return;
+        }
+
+        button.prop('disabled', true);
+        $('#loader').show();
+    });
+
+    // Custom select box functionality
+    $('.sel').each(function() {
+        $(this).children('select').css('display', 'none');
+        var $current = $(this);
+        $(this).find('option').each(function(i) {
+            if (i === 0) {
+                $current.prepend($('<div>', { class: $current.attr('class').replace(/sel/g, 'sel__box') }));
+                var placeholder = $(this).text();
+                $current.prepend($('<span>', { class: $current.attr('class').replace(/sel/g, 'sel__placeholder'), text: placeholder }));
+                return;
+            }
+            $current.children('div').append($('<span>', { class: $current.attr('class').replace(/sel/g, 'sel__box__options'), text: $(this).text() }));
+        });
+    });
+
+    $('.sel').click(function() { $(this).toggleClass('active'); });
+    $(document).on('click', '.sel__box__options', function() {
+        var txt = $(this).text();
+        var index = $(this).index();
+        $(this).siblings('.sel__box__options').removeClass('selected');
+        $(this).addClass('selected');
+        var $currentSel = $(this).closest('.sel');
+        $currentSel.children('.sel__placeholder').text(txt);
+        $currentSel.children('select').prop('selectedIndex', index + 1);
+    });
+
+    // Pagination Logic
+    const itemsPerPage = 5;
+    let currentPage = 1;
+    let allRows = [];
+
+    function setupPagination() {
+        allRows = $('#resultsTableBody tr').toArray();
+        const totalItems = allRows.length;
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+        if (totalItems > itemsPerPage) {
+            $('#pagination').show();
+            renderPage(currentPage, totalPages);
+        } else {
+            $('#pagination').hide();
+        }
+    }
+
+    function renderPage(page, totalPages) {
+        currentPage = page;
+        $('#resultsTableBody').empty();
+
+        const start = (page - 1) * itemsPerPage;
+        const end = start + itemsPerPage;
+        const pageRows = allRows.slice(start, end);
+
+        $('#resultsTableBody').append(pageRows);
+
+        $('#prevPage').prop('disabled', page === 1);
+        $('#nextPage').prop('disabled', page === totalPages);
+
+        $('#pageNumbers').empty();
+        for (let i = 1; i <= totalPages; i++) {
+            const pageBtn = $('<button>', {
+                class: 'pagination-btn page-number' + (i === page ? ' active' : ''),
+                text: i
+            });
+            $('#pageNumbers').append(pageBtn);
+        }
+    }
+
+    $('#prevPage').click(function() {
+        if (currentPage > 1) {
+            renderPage(currentPage - 1, Math.ceil(allRows.length / itemsPerPage));
+        }
+    });
+
+    $('#nextPage').click(function() {
+        const totalPages = Math.ceil(allRows.length / itemsPerPage);
+        if (currentPage < totalPages) {
+            renderPage(currentPage + 1, totalPages);
+        }
+    });
+
+    $(document).on('click', '.page-number', function() {
+        const page = parseInt($(this).text());
+        renderPage(page, Math.ceil(allRows.length / itemsPerPage));
+    });
+
+    if ($('#resultsTableBody').length) {
+        setupPagination();
+    }
+});
+
+const selectYear = document.getElementById("year");
+for (let year = 2000; year <= 2030; year++) {
+    let option = document.createElement("option");
+    option.value = year;
+    option.textContent = year;
+    if (year === new Date().getFullYear()) {
+        option.selected = true;
+    }
+    selectYear.appendChild(option);
+}
+</script>
+</body>
+</html>

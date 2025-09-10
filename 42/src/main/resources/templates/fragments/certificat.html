@@ -1,0 +1,20 @@
+<div th:fragment="certificat" class="contact-card">
+    <form method="get" action="/certificate-generator">
+        <input type="text" class="admin-input" name="login" th:if="${kind == 'admin'}" required>
+        <input type="hidden" name="login" th:value="${userResponse.login}" th:unless="${kind == 'admin'}">
+
+        <div class="sel sel--black-panther">
+            <select name="signer_par" id="signer_par" required>
+                <option value="Aucune">None</option>
+                <option value="Directeur">Director</option>
+                <option value="Assistant">Assistant</option>
+            </select>
+        </div>
+
+        <button type="submit" class="codepen-button"><span>Generate Certificate</span></button>
+        <div id="loader" style="display:none; margin-top: 20px; text-align:center;">
+            <div class="spinner"></div>
+            <div style="color:#00ffcc; margin-top:5px;">Géneration in Progress...</div>
+        </div>
+    </form>
+</div>

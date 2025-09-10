@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checking</title>
+
+    <!-- CSS global -->
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+    <!-- CSS Sidebar -->
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}">
+    <!-- CSS Checking -->
+    <link rel="stylesheet" th:href="@{/css/checking.css}">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<body>
+
+    <div class="container">
+        <!-- Hover area to trigger sidebar -->
+        <div class="hover-area"></div>
+
+        <!-- Sidebar -->
+        <div th:replace="fragments/sidebar :: sidebar"></div>
+
+        <!-- Principal content -->
+        <main class="content">
+
+            <!-- Header -->
+            <div th:replace="fragments/header :: header"></div>
+
+            <!-- Checking -->
+            <div th:replace="fragments/checking :: checking"></div>
+
+            <!-- Popup d'erreur -->
+            <div th:replace="fragments/error :: error"></div>
+        </main>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+    $(document).ready(function() {
+        const $sidebar = $('.sidebar');
+        const $hoverArea = $('.hover-area');
+
+        $hoverArea.on('mouseenter', function() {
+            $sidebar.addClass('visible');
+        });
+
+        $sidebar.on('mouseleave', function() {
+            $sidebar.removeClass('visible');
+        });
+
+        // Checking form handling
+        $('#checkingForm').on('submit', function(e) {
+            const startDate = $(this).find('input[name="startDate"]').val();
+            const endDate = $(this).find('input[name="endDate"]').val();
+            const button = $(this).find('button[type="submit"]');
+
+            // Validation côté client
+            if (!startDate || !endDate) {
+                alert('Les dates sont requises');
+                e.preventDefault();
+                return;
+            }
+
+            if (new Date(endDate) < new Date(startDate)) {
+                alert('La date de fin doit être postérieure ou égale à la date de début');
+                e.preventDefault();
+                return;
+            }
+
+            button.prop('disabled', true);
+            $('#loader').show();
+        });
+
+        // Custom select handling
+        $('.sel').each(function() {
+            $(this).children('select').css('display', 'none');
+            var $current = $(this);
+            $(this).find('option').each(function(i) {
+                if (i === 0) {
+                    $current.prepend($('<div>', { class: $current.attr('class').replace(/sel/g, 'sel__box') }));
+                    var placeholder = $(this).text();
+                    $current.prepend($('<span>', {
+                        class: $current.attr('class').replace(/sel/g, 'sel__placeholder'),
+                        text: placeholder,
+                        'data-placeholder': placeholder
+                    }));
+                    return;
+                }
+                $current.children('div').append($('<span>', {
+                    class: $current.attr('class').replace(/sel/g, 'sel__box__options'),
+                    text: $(this).text()
+                }));
+            });
+        });
+
+        $('.sel').click(function() { 
+            $(this).toggleClass('active'); 
+        });
+
+        $(document).on('click', '.sel__box__options', function() {
+            var txt = $(this).text();
+            var index = $(this).index();
+            $(this).siblings('.sel__box__options').removeClass('selected');
+            $(this).addClass('selected');
+            var $currentSel = $(this).closest('.sel');
+            $currentSel.children('.sel__placeholder').text(txt);
+            $currentSel.children('select').prop('selectedIndex', index + 1);
+        });
+    });
+    </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const popup = document.getElementById("errorPopup");
+            if(popup) {
+                popup.style.display = "block";
+                popup.querySelector(".close").onclick = function() {
+                    popup.style.display = "none";
+                }
+                window.onclick = function(event) {
+                    if(event.target === popup) {
+                        popup.style.display = "none";
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

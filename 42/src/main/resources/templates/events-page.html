@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campus Events</title>
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/checking.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <!-- Pagination styles -->
+    <style>
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            padding: 20px;
+            background: rgba(0, 255, 204, 0.05);
+            border-left: 3px solid #00ffcc;
+            border-right: 3px solid #00ffcc;
+            border-bottom: 3px solid #00ffcc;
+            border-radius: 0 0 10px 10px;
+        }
+
+        .pagination-btn {
+            padding: 10px 15px;
+            background: rgba(0, 255, 204, 0.1);
+            border: 2px solid #00ffcc;
+            border-radius: 5px;
+            color: #00ffcc;
+            font-size: 14px;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            background: linear-gradient(135deg, rgba(0, 255, 204, 0.2), rgba(0, 212, 170, 0.2));
+            transform: translateY(-2px);
+            box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
+        }
+
+        .pagination-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination-btn.active {
+            background: linear-gradient(135deg, #00ffcc, #00d4aa);
+            color: #000;
+            border: 2px solid #00ffcc;
+        }
+
+        .pagination-btn i {
+            margin: 0 5px;
+        }
+
+        .page-number {
+            min-width: 40px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="hover-area"></div>
+    <div th:replace="fragments/sidebar :: sidebar"></div>
+
+    <main class="content">
+        <div th:replace="fragments/header :: header"></div>
+
+        <!-- Events Filter Form -->
+        <div class="contact-card">
+            <form id="eventsForm" method="post" th:action="@{/events}">
+                <div class="date-group">
+                    <div class="date-input-wrapper">
+                        <label for="beginAt">Start Date</label>
+                        <input type="date" class="user-input date-input" name="beginAt" id="beginAt" th:value="${beginAt}">
+                    </div>
+                    <div class="date-input-wrapper">
+                        <label for="endAt">End Date</label>
+                        <input type="date" class="user-input date-input" name="endAt" id="endAt" th:value="${endAt}">
+                    </div>
+                </div>
+                <button type="submit" class="codepen-button">
+                    <span><i class="fa fa-search"></i> Filter Events</span>
+                </button>
+
+                <div id="loader" style="display:none; margin-top: 20px; text-align:center;">
+                    <div class="spinner"></div>
+                    <div style="color:#00ffcc; margin-top:5px;">Fetching events...</div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Events Table -->
+        <div class="results-section" th:if="${searchPerformed}">
+            <div class="table-header">
+                <h3><i class="fa fa-calendar"></i> Campus 42 Antananarivo Events</h3>
+            </div>
+
+            <div class="table-container" th:if="${events != null and !#lists.isEmpty(events)}">
+                <table class="results-table" id="eventsTable">
+                    <thead>
+                        <tr>
+                            <th><i class="fa fa-hashtag"></i> ID</th>
+                            <th><i class="fa fa-user"></i> Name</th>
+                            <th><i class="fa fa-map-marker"></i> Location</th>
+                            <th><i class="fa fa-tags"></i> Type</th>
+                            <th><i class="fa fa-users"></i> Subscribers</th>
+                            <th><i class="fa fa-calendar"></i> Begin</th>
+                            <th><i class="fa fa-calendar"></i> End</th>
+                        </tr>
+                    </thead>
+                    <tbody id="eventsTableBody">
+                        <tr th:each="event : ${events}">
+                            <td th:text="${event.id}"></td>
+                            <td th:text="${event.name}"></td>
+                            <td th:text="${event.location != null && !#strings.isEmpty(event.location) ? event.location : '-'}"></td>
+                            <td th:text="${event.kind}"></td>
+                            <td th:text="${event.nbrSubscribers}"></td>
+                            <td th:text="${#temporals.format(event.beginAt, 'dd/MM/yyyy HH:mm')}"></td>
+                            <td th:text="${#temporals.format(event.endAt, 'dd/MM/yyyy HH:mm')}"></td>
+
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- Pagination controls -->
+                <div class="pagination" id="pagination" 
+                    style="display:flex; justify-content:space-between; align-items:center; padding:10px 0;">
+                    
+                    <div>
+                        <button class="pagination-btn" id="prevPage" disabled>
+                            <i class="fa fa-chevron-left"></i> Previous
+                        </button>
+                        <button class="pagination-btn" id="nextPage">
+                            Next <i class="fa fa-chevron-right"></i>
+                        </button>
+                    </div>
+
+                    <div style="display:flex; align-items:center; gap:15px;">
+                        <div id="totalEvents" style="color:#00ffcc; font-weight:bold;">
+                            Total événements : <span th:text="${events != null ? events.size() : 0}">0</span>
+                        </div>
+
+                        <!-- Bouton Export CSV -->
+                        <form th:action="@{/events/export}" method="get" style="margin:0;">
+                            <button type="submit" class="pagination-btn">
+                                <i class="fa fa-download"></i> Exporter
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+
+            </div>
+
+            <div class="no-results" th:if="${events == null or #lists.isEmpty(events)}">
+                <div class="no-results-icon">
+                    <i class="fa fa-info-circle"></i>
+                </div>
+                <p>No events found for the selected period.</p>
+            </div>
+        </div>
+
+        <div class="error-message" th:if="${error != null}">
+            <p th:text="${error}"></p>
+        </div>
+
+    </main>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+    const $sidebar = $('.sidebar');
+    const $hoverArea = $('.hover-area');
+
+    $hoverArea.on('mouseenter', function() { $sidebar.addClass('visible'); });
+    $sidebar.on('mouseleave', function() { $sidebar.removeClass('visible'); });
+
+    $('#eventsForm').on('submit', function(e) {
+        $(this).find('button[type="submit"]').prop('disabled', true);
+        $('#loader').show();
+    });
+
+    // --- Pagination Logic ---
+    const itemsPerPage = 5;
+    let currentPage = 1;
+    let allRows = [];
+
+    function setupPagination() {
+        allRows = $('#eventsTableBody tr').toArray();
+        const totalItems = allRows.length;
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+        $('#pagination').show();
+        renderPage(currentPage, totalPages);
+
+    }
+
+    function renderPage(page, totalPages) {
+        currentPage = page;
+        $('#eventsTableBody').empty();
+
+        const start = (page - 1) * itemsPerPage;
+        const end = start + itemsPerPage;
+        const pageRows = allRows.slice(start, end);
+        $('#eventsTableBody').append(pageRows);
+
+        $('#prevPage').prop('disabled', page === 1);
+        $('#nextPage').prop('disabled', page === totalPages);
+
+        $('#pageNumbers').empty();
+        for (let i = 1; i <= totalPages; i++) {
+            const pageBtn = $('<button>', {
+                class: 'pagination-btn page-number' + (i === page ? ' active' : ''),
+                text: i
+            });
+            $('#pageNumbers').append(pageBtn);
+        }
+    }
+
+    $('#prevPage').click(function() {
+        if (currentPage > 1) renderPage(currentPage - 1, Math.ceil(allRows.length / itemsPerPage));
+    });
+
+    $('#nextPage').click(function() {
+        const totalPages = Math.ceil(allRows.length / itemsPerPage);
+        if (currentPage < totalPages) renderPage(currentPage + 1, totalPages);
+    });
+
+    $(document).on('click', '.page-number', function() {
+        const page = parseInt($(this).text());
+        renderPage(page, Math.ceil(allRows.length / itemsPerPage));
+    });
+
+    if ($('#eventsTableBody').length) setupPagination();
+});
+</script>
+</body>
+</html>

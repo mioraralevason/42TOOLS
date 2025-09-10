@@ -1,0 +1,9 @@
+<!-- Popup d'erreur -->
+<div th:fragment="error" id="errorPopup" class="popup-error" th:if="${error}">
+    <div class="popup-content">
+        <span class="close">&times;</span>
+        <p th:text="${error}">Message d'erreur</p>
+    </div>
+</div>
+
+<style>

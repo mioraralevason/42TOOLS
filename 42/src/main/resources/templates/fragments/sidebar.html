@@ -1,0 +1,22 @@
+<!-- templates/fragments/sidebar.html -->
+<div th:fragment="sidebar">
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}" />
+
+    <aside class="sidebar">
+        <ul>
+            <li><a th:href="@{/certificate}"><i class="fa fa-home"></i> Certificat Scolarite</a></li>
+            <li><a th:href="@{/freeze-begin}"><i class="fa fa-snowflake-o"></i> Freeze</a></li>
+            
+            <!-- Checking avec sous-menu -->
+            <li class="has-submenu">
+                <a href="#"><i class="fa fa-check-square-o"></i> Checking <i class="fa fa-caret-down"></i></a>
+                <ul class="submenu">
+                    <li><a th:href="@{/check}">Admin</a></li>
+                    <li><a th:href="@{/checkUser}">User</a></li>
+                </ul>
+            </li>
+            <li><a th:href="@{/events}"><i class="fa fa-calendar"></i> Events</a></li>
+
+        </ul>
+    </aside>
+</div>
