@@ -1,0 +1,20 @@
+<div th:fragment="header" class="profile-card">
+    <div class="profile-info">
+        <img th:src="${session.userResponse.image.link}" th:alt="${session.userResponse.image.link}" class="profile-pic">
+        <div class="name-status">
+            <h1 th:text="${session.userResponse.first_name} + ' ' + ${session.userResponse.last_name}"></h1>
+            <span class="username" th:text="${session.userResponse.login}"></span>
+            <p>
+                <i class="fa fa-envelope contact-icon" aria-hidden="true"></i>
+                <span th:text="${session.userResponse.email}"></span>
+            </p>
+            <p>
+                <span th:text="${session.countUser}"></span>
+            </p>
+        </div>
+    </div>
+
+    <div class="logo-section">
+        <img th:src="@{/images/logo-42.png}" alt="Logo" class="logo-img">
+    </div>
+</div>

@@ -1,0 +1,113 @@
+/* ===== Sidebar global ===== */
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: -220px; /* Hidden by default */
+    width: 220px;
+    height: 100%;
+    background-color: #0d0d2b;
+    padding-top: 20px;
+    box-shadow: 2px 0 6px rgba(0,0,0,0.3);
+    display: flex;
+    flex-direction: column;
+    z-index: 1000;
+    transition: transform 0.3s ease; /* Smooth slide animation */
+}
+
+.sidebar.visible {
+    transform: translateX(220px); /* Slide in when visible */
+}
+
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar ul li {
+    margin: 10px 0;
+}
+
+.sidebar ul li a {
+    display: block;
+    padding: 12px 20px;
+    color: #fff;
+    text-decoration: none;
+    font-weight: 500;
+    transition: background 0.3s ease, padding-left 0.3s ease;
+}
+
+.sidebar ul li a:hover {
+    background-color: #1e1e3f;
+    padding-left: 30px;
+    color: #00ffcc;
+}
+
+/* ===== Hover area for sidebar trigger ===== */
+.hover-area {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 20px; /* Narrow strip to trigger sidebar */
+    height: 100%;
+    z-index: 1001;
+}
+
+/* ===== Ajustement contenu quand sidebar présente ===== */
+.container {
+    display: flex;
+}
+
+.content {
+    margin-left: 0; /* No margin since sidebar is hidden by default */
+    padding: 20px;
+    width: 100%;
+    box-sizing: border-box;
+    transition: margin-left 0.3s ease;
+}
+
+/* ===== Responsive (Mobile) ===== */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 180px;
+        left: -180px;
+    }
+    .sidebar.visible {
+        transform: translateX(180px);
+    }
+    .content {
+        margin-left: 0;
+        width: 100%;
+    }
+}
+
+@media (max-width: 600px) {
+    .sidebar {
+        position: absolute;
+        width: 100%;
+        height: auto;
+        left: 0;
+        top: -100%; /* Hidden above the viewport */
+        flex-direction: row;
+        padding: 10px 0;
+        transform: translateY(0);
+    }
+    .sidebar.visible {
+        transform: translateY(100%); /* Slide down when visible */
+    }
+    .sidebar ul {
+        display: flex;
+        justify-content: space-around;
+        width: 100%;
+    }
+    .content {
+        margin-top: 0;
+        width: 100%;
+    }
+    .hover-area {
+        width: 100%;
+        height: 20px; /* Trigger area at the top for mobile */
+        top: 0;
+        left: 0;
+    }
+}

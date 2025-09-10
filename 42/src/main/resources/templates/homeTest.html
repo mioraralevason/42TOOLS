@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1>Home</h1>
+
+    <p>Hello, <span th:text="${locationStats.getUserId()}"></span></p>
+
+    <p>Date de début : <span th:text="${userCursus.getBegin_at()}"></span></p>
+
+    <p>Nombre de jours (tous les jours) : 
+        <span th:text="${locationStats.getNbDays(userCursus.getBegin_at(), null)}"></span>
+    </p>
+
+    <p>Nombre de jours ouvrables : 
+        <span th:text="${locationStats.getNbOpenDays(userCursus.getBegin_at(), null)}"></span>
+    </p>
+
+    <p>Total d'heures : 
+        <span th:text="${locationStats.getTotalHours(userCursus.getBegin_at(), null)}"></span>
+    </p>
+    <p>Milestone : <span th:text="${userCursus.getMilestone()}"></span></p>
+    <p>Freeze : <span th:text="${freeze}"></span></p>
+</body>
+</html>
