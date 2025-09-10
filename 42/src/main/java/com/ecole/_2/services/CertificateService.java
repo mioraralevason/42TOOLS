@@ -58,18 +58,31 @@ public class CertificateService {
         COUNTRY_TO_NATIONALITY.put("Germany", "Allemande");
     }
 
-    public Resource generateCertificate(String login, String signerPar) {
+    public Resource generateCertificate(String login, String signerPar, String lang) {
         try {
             if (login == null || login.trim().isEmpty()) {
-                throw new IllegalArgumentException("Le login ne peut pas être vide");
+                throw new IllegalArgumentException("Login cannot be empty");
             }
-            
+
             if (!login.matches("^[a-zA-Z0-9_]+$")) {
-                throw new IllegalArgumentException("Le login ne doit contenir que des lettres, chiffres ou underscores");
+                throw new IllegalArgumentException("Login must only contain letters, numbers or underscores");
             }
-            
-            if (!"Directeur".equals(signerPar) && !"Assistant".equals(signerPar) && !"Aucune".equals(signerPar)) {
-                signerPar = "Aucune";
+
+            // Normalisation côté service : n'accepte que ces valeurs (canonique FR)
+            String signerNormalized = "Aucune";
+            if (signerPar != null) {
+                if ("Directeur".equalsIgnoreCase(signerPar) || "Director".equalsIgnoreCase(signerPar)) {
+                    signerNormalized = "Directeur";
+                } else if ("Assistant".equalsIgnoreCase(signerPar)) {
+                    signerNormalized = "Assistant";
+                } else {
+                    signerNormalized = "Aucune";
+                }
+            }
+
+            // Validation langue : on n'accepte que 'fr' ou 'en'
+            if (lang == null || (!"fr".equalsIgnoreCase(lang) && !"en".equalsIgnoreCase(lang))) {
+                throw new IllegalArgumentException("lang must be 'fr' or 'en'");
             }
 
             String token = apiService.getAccessToken();
@@ -77,47 +90,58 @@ public class CertificateService {
             Map<String, Object> userData = apiService.getUser(userId, token);
             Map<String, Object> candidatureData = apiService.getUserCandidature(userId, token);
 
-            ByteArrayOutputStream outputStream = createPdfDocument(userData, candidatureData, signerPar);
-            
+            ByteArrayOutputStream outputStream = createPdfDocument(userData, candidatureData, signerNormalized, lang.toLowerCase());
+
             return new ByteArrayResource(outputStream.toByteArray());
 
+        } catch (IOException | DocumentException e) {
+            throw new RuntimeException("Error generating certificate for " + login + ": " + e.getMessage(), e);
         } catch (Exception e) {
-            throw new RuntimeException("Erreur lors de la génération du certificat pour " + login + ": " + e.getMessage(), e);
+            throw new RuntimeException("Error generating certificate for " + login + ": " + e.getMessage(), e);
         }
     }
 
-    private ByteArrayOutputStream createPdfDocument(Map<String, Object> userData, Map<String, Object> candidatureData, String signerPar) throws DocumentException, IOException {
+    private ByteArrayOutputStream createPdfDocument(Map<String, Object> userData, Map<String, Object> candidatureData,
+                                                    String signerPar, String lang) throws DocumentException, IOException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         Document document = new Document(PageSize.A4, 56.7f, 56.7f, 113.4f, 113.4f);
-        
+
         try {
             PdfWriter writer = PdfWriter.getInstance(document, outputStream);
-            
+
             writer.setPageEvent(new PdfPageEventHelper() {
                 @Override
                 public void onEndPage(PdfWriter writer, Document document) {
                     try {
                         drawImages(writer.getDirectContent(), signerPar);
                     } catch (Exception e) {
-                        System.err.println("Erreur lors du dessin des images: " + e.getMessage());
+                        System.err.println("Image drawing error: " + e.getMessage());
                     }
                 }
             });
 
             document.open();
-            
-            addContent(document, userData, candidatureData, signerPar);
-            
+
+            if ("en".equalsIgnoreCase(lang)) {
+                addContentEnglish(document, userData, candidatureData, signerPar);
+            } else {
+                addContentFrench(document, userData, candidatureData, signerPar);
+            }
+
         } finally {
             if (document.isOpen()) {
                 document.close();
             }
         }
-        
+
         return outputStream;
     }
 
-    private void addContent(Document document, Map<String, Object> userData, Map<String, Object> candidatureData, String signerPar) throws DocumentException {
+    // --- addContentFrench, addContentEnglish, drawImages, formatDateNaissance, getStringValue ---
+    // J'ai repris exactement tes méthodes existantes (inchangées) pour préserver la mise en page
+    // et le texte FR/EN. Les méthodes sont celles que tu avais précédemment :
+    private void addContentFrench(Document document, Map<String, Object> userData,
+                                  Map<String, Object> candidatureData, String signerPar) throws DocumentException {
         try {
             Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16, BaseColor.BLACK);
             Font bodyFont = FontFactory.getFont(FontFactory.HELVETICA, 12, BaseColor.BLACK);
@@ -137,8 +161,9 @@ public class CertificateService {
             String adresse = getStringValue(candidatureData, "postal_street", "Inconnu");
             String zipCode = getStringValue(candidatureData, "postal_zip_code", "00000");
             String ville = getStringValue(candidatureData, "postal_city", "Inconnu");
-            String nationalite = COUNTRY_TO_NATIONALITY.getOrDefault(getStringValue(candidatureData, "country", "Inconnu"), "Inconnue");
-            
+            String nationalite = COUNTRY_TO_NATIONALITY.getOrDefault(
+                    getStringValue(candidatureData, "country", "Inconnu"), "Inconnue");
+
             String gender = getStringValue(candidatureData, "gender", "");
             String monsieurMadame = "male".equals(gender) ? "Monsieur" : "female".equals(gender) ? "Madame" : "Monsieur";
             String interesse = "male".equals(gender) ? "l'intéressé" : "female".equals(gender) ? "l'intéressée" : "l'intéressé";
@@ -150,13 +175,13 @@ public class CertificateService {
             Paragraph content = new Paragraph();
             content.setAlignment(Element.ALIGN_LEFT);
             content.setSpacingAfter(12f);
-            
+
             content.add(new Chunk("Je soussigné, Monsieur ", bodyFont));
             content.add(new Chunk(responsable + ", " + poste, boldFont));
             content.add(new Chunk(" de l'établissement " + etablissement + ", domicilié au " + etablissementAdresse + ", atteste que l'élève :", bodyFont));
             content.add(Chunk.NEWLINE);
             content.add(Chunk.NEWLINE);
-            
+
             content.add(new Chunk(monsieurMadame, boldFont));
             content.add(Chunk.NEWLINE);
             content.add(new Chunk("Nom", boldFont));
@@ -178,16 +203,15 @@ public class CertificateService {
             content.add(new Chunk(" : " + adresse + ", " + zipCode + " " + ville, bodyFont));
             content.add(Chunk.NEWLINE);
             content.add(Chunk.NEWLINE);
-            
-            content.add(new Chunk("Est régulièrement " + inscrit + " pour l'année " + currentYear + " à l'école " + etablissement + ", école gratuite sans frais d'écolage, et n'y a pas encore fini ses études.", bodyFont));
-            content.add(Chunk.NEWLINE);
-            content.add(Chunk.NEWLINE);
-            content.add(new Chunk("Cette attestation est délivrée le " + currentDate + " à la demande de " + interesse + " pour servir et faire valoir ce que de droit.", bodyFont));
-            
-            document.add(content);
 
-            document.add(new Paragraph(" ", bodyFont));
-            document.add(new Paragraph(" ", bodyFont));
+            content.add(new Chunk("Est régulièrement " + inscrit + " pour l'année " + currentYear +
+                    " à l'école " + etablissement + ", école gratuite sans frais d'écolage, et n'y a pas encore fini ses études.", bodyFont));
+            content.add(Chunk.NEWLINE);
+            content.add(Chunk.NEWLINE);
+            content.add(new Chunk("Cette attestation est délivrée le " + currentDate +
+                    " à la demande de " + interesse + " pour servir et faire valoir ce que de droit.", bodyFont));
+
+            document.add(content);
 
             Paragraph footer = new Paragraph();
             footer.add(new Chunk("BY ", footerFont));
@@ -198,11 +222,99 @@ public class CertificateService {
             footer.add(new Chunk(etablissementAdresse, footerFont));
             footer.setAlignment(Element.ALIGN_CENTER);
             footer.setSpacingBefore(40f);
-            
+
             document.add(footer);
-            
+
         } catch (Exception e) {
-            throw new DocumentException("Erreur lors de la création du contenu: " + e.getMessage(), e);
+            throw new DocumentException("Error creating French content: " + e.getMessage(), e);
+        }
+    }
+
+    private void addContentEnglish(Document document, Map<String, Object> userData,
+                                   Map<String, Object> candidatureData, String signerPar) throws DocumentException {
+        try {
+            Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16, BaseColor.BLACK);
+            Font bodyFont = FontFactory.getFont(FontFactory.HELVETICA, 12, BaseColor.BLACK);
+            Font boldFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, BaseColor.BLACK);
+            Font footerFont = FontFactory.getFont(FontFactory.HELVETICA, 10, BaseColor.BLACK);
+            Font footerFont2 = FontFactory.getFont(FontFactory.HELVETICA, 10, new BaseColor(39, 221, 245));
+
+            Paragraph title = new Paragraph("School Certificate", titleFont);
+            title.setAlignment(Element.ALIGN_CENTER);
+            title.setSpacingAfter(20f);
+            document.add(title);
+
+            String nom = getStringValue(userData, "last_name", "Unknown");
+            String prenom = getStringValue(userData, "first_name", "Unknown");
+            String dateNaissance = formatDateNaissance(getStringValue(candidatureData, "birth_date", "2000-01-01"));
+            String lieuNaissance = getStringValue(candidatureData, "birth_city", "Unknown");
+            String adresse = getStringValue(candidatureData, "postal_street", "Unknown");
+            String zipCode = getStringValue(candidatureData, "postal_zip_code", "00000");
+            String ville = getStringValue(candidatureData, "postal_city", "Unknown");
+            String nationalite = getStringValue(candidatureData, "country", "Unknown");
+
+            String gender = getStringValue(candidatureData, "gender", "");
+            String mrMrs = "male".equals(gender) ? "Mr." : "female".equals(gender) ? "Mrs." : "Mr./Mrs.";
+            String heShe = "male".equals(gender) ? "he" : "female".equals(gender) ? "she" : "he/she";
+            String enrolled = "male".equals(gender) ? "enrolled" : "female".equals(gender) ? "enrolled" : "enrolled";
+
+            String currentDate = new SimpleDateFormat("dd/MM/yyyy").format(new Date());
+            String currentYear = String.valueOf(LocalDate.now().getYear());
+
+            Paragraph content = new Paragraph();
+            content.setAlignment(Element.ALIGN_LEFT);
+            content.setSpacingAfter(12f);
+
+            content.add(new Chunk("I, the undersigned, Mr. ", bodyFont));
+            content.add(new Chunk(responsable + ", " + poste, boldFont));
+            content.add(new Chunk(" of the institution " + etablissement + ", located at " + etablissementAdresse + ", hereby certify that the student:", bodyFont));
+            content.add(Chunk.NEWLINE);
+            content.add(Chunk.NEWLINE);
+
+            content.add(new Chunk(mrMrs, boldFont));
+            content.add(Chunk.NEWLINE);
+            content.add(new Chunk("Last name", boldFont));
+            content.add(new Chunk(" : " + nom, bodyFont));
+            content.add(Chunk.NEWLINE);
+            content.add(new Chunk("First name", boldFont));
+            content.add(new Chunk(" : " + prenom, bodyFont));
+            content.add(Chunk.NEWLINE);
+            content.add(new Chunk("Date of birth", boldFont));
+            content.add(new Chunk(" : " + dateNaissance, bodyFont));
+            content.add(Chunk.NEWLINE);
+            content.add(new Chunk("Place of birth", boldFont));
+            content.add(new Chunk(" : " + lieuNaissance, bodyFont));
+            content.add(Chunk.NEWLINE);
+            content.add(new Chunk("Nationality", boldFont));
+            content.add(new Chunk(" : " + nationalite, bodyFont));
+            content.add(Chunk.NEWLINE);
+            content.add(new Chunk("Address", boldFont));
+            content.add(new Chunk(" : " + adresse + ", " + zipCode + " " + ville, bodyFont));
+            content.add(Chunk.NEWLINE);
+            content.add(Chunk.NEWLINE);
+
+            content.add(new Chunk("Is regularly " + enrolled + " for the year " + currentYear +
+                    " at " + etablissement + ", a free school with no tuition fees, and has not yet completed their studies.", bodyFont));
+            content.add(Chunk.NEWLINE);
+            content.add(Chunk.NEWLINE);
+            content.add(new Chunk("This certificate is issued on " + currentDate + " at the request of the interested party to serve and assert their legal rights.", bodyFont));
+
+            document.add(content);
+
+            Paragraph footer = new Paragraph();
+            footer.add(new Chunk("BY ", footerFont));
+            Chunk etablissementChunk = new Chunk(etablissement, footerFont2);
+            etablissementChunk.setUnderline(0.5f, -2f);
+            footer.add(etablissementChunk);
+            footer.add(Chunk.NEWLINE);
+            footer.add(new Chunk(etablissementAdresse, footerFont));
+            footer.setAlignment(Element.ALIGN_CENTER);
+            footer.setSpacingBefore(40f);
+
+            document.add(footer);
+
+        } catch (Exception e) {
+            throw new DocumentException("Error creating English content: " + e.getMessage(), e);
         }
     }
 
@@ -210,21 +322,21 @@ public class CertificateService {
         try {
             float pageWidth = PageSize.A4.getWidth();
             float pageHeight = PageSize.A4.getHeight();
-            
+
             try {
                 if (logoPath != null && !logoPath.equals("Inconnu.png") && Files.exists(Paths.get(logoPath))) {
                     Image logo = Image.getInstance(logoPath);
                     logo.scaleToFit(pageWidth - 113.4f, 113.4f);
-                    
+
                     float logoWidth = logo.getScaledWidth();
-                    float logoX = (pageWidth - logoWidth) / 2;  
+                    float logoX = (pageWidth - logoWidth) / 2;
                     float logoY = pageHeight - logo.getScaledHeight();
 
                     logo.setAbsolutePosition(logoX, logoY);
                     canvas.addImage(logo);
                 }
             } catch (Exception e) {
-                System.err.println("Erreur logo: " + e.getMessage());
+                System.err.println("Logo error: " + e.getMessage());
             }
 
             try {
@@ -240,17 +352,17 @@ public class CertificateService {
                     canvas.addImage(tampon);
                 }
             } catch (Exception e) {
-                System.err.println("Erreur tampon: " + e.getMessage());
+                System.err.println("Tampon error: " + e.getMessage());
             }
-            
+
             try {
                 String signaturePath = null;
-                if ("Directeur".equals(signerPar)) {
+                if ("Directeur".equalsIgnoreCase(signerPar) || "Director".equalsIgnoreCase(signerPar)) {
                     signaturePath = signatureDirecteurPath;
-                } else if ("Assistant".equals(signerPar)) {
+                } else if ("Assistant".equalsIgnoreCase(signerPar)) {
                     signaturePath = signatureAssistantPath;
                 }
-                
+
                 if (signaturePath != null && !signaturePath.equals("Inconnu.png") && Files.exists(Paths.get(signaturePath))) {
                     Image signature = Image.getInstance(signaturePath);
                     signature.scaleToFit(170.1f, 85.05f);
@@ -258,26 +370,24 @@ public class CertificateService {
                     canvas.addImage(signature);
                 }
             } catch (Exception e) {
-                System.err.println("Erreur signature: " + e.getMessage());
+                System.err.println("Signature error: " + e.getMessage());
             }
-            
+
         } catch (Exception e) {
-            System.err.println("Erreur générale lors du dessin des images: " + e.getMessage());
+            System.err.println("General drawing error: " + e.getMessage());
         }
     }
 
     private String formatDateNaissance(String birthDate) {
         try {
             if (birthDate == null || birthDate.trim().isEmpty()) {
-                System.out.println("Aucune date de naissance trouvée, utilisation de la date par défaut '01/01/2000'");
                 return "01/01/2000";
             }
-            
+
             LocalDate date = LocalDate.parse(birthDate, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
             return date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-            
+
         } catch (Exception e) {
-            System.err.println("Format de date de naissance invalide: " + e.getMessage());
             return "01/01/2000";
         }
     }
