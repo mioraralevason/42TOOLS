@@ -236,11 +236,11 @@ public class CertificateService {
             String adresse = getStringValue(candidatureData, "postal_street", "Unknown");
             String zipCode = getStringValue(candidatureData, "postal_zip_code", "00000");
             String ville = getStringValue(candidatureData, "postal_city", "Unknown");
-            String nationalite = getStringValue(candidatureData, "country", "Unknown");
+            String nationalite = COUNTRY_TO_NATIONALITY.getOrDefault(
+                getStringValue(candidatureData, "country", "Inconnu"), "Inconnue");
 
             String gender = getStringValue(candidatureData, "gender", "");
             String mrMrs = "male".equals(gender) ? "Mr." : "female".equals(gender) ? "Mrs." : "Mr./Mrs.";
-            String heShe = "male".equals(gender) ? "he" : "female".equals(gender) ? "she" : "he/she";
             String enrolled = "male".equals(gender) ? "enrolled" : "female".equals(gender) ? "enrolled" : "enrolled";
 
             String currentDate = new SimpleDateFormat("dd/MM/yyyy").format(new Date());

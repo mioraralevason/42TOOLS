@@ -88,12 +88,14 @@ public class AuthController {
         // session.setAttribute("userList", userList);
 
         // String kind = determineUserKind(userResponse);
-        session.setAttribute("kind", "admin");
+        String kind = "admin";
 
-        model.addAttribute("kind", "admin");
+        session.setAttribute("kind", kind);
+        
+        model.addAttribute("kind", kind);
         model.addAttribute("userResponse", userResponse);
 
-        logger.info("Authentication successful for user: {} (Type: {})", userResponse.getLogin(), "admin");
+        logger.info("Authentication successful for user: {} (Type: {})", userResponse.getLogin(), kind);
 
         return "certificat-page";
     }

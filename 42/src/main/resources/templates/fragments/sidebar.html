@@ -11,11 +11,11 @@
             <li class="has-submenu">
                 <a href="#"><i class="fa fa-check-square-o"></i> Checking <i class="fa fa-caret-down"></i></a>
                 <ul class="submenu">
-                    <li><a th:href="@{/check}">Admin</a></li>
+                    <li th:if="${session.kind == 'admin'}" ><a th:href="@{/check}">Admin</a></li>
                     <li><a th:href="@{/checkUser}">User</a></li>
                 </ul>
             </li>
-            <li><a th:href="@{/events}"><i class="fa fa-calendar"></i> Events</a></li>
+            <li th:if="${session.kind == 'admin'}" ><a th:href="@{/events}"><i class="fa fa-calendar"></i> Events</a></li>
 
         </ul>
     </aside>

@@ -333,37 +333,6 @@ input[name="login"]::placeholder {
     }
 }
 
-.popup-error {
-    display: none; /* caché par défaut */
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.5);
-}
-
-.popup-content {
-    background-color: #f44336;
-    color: white;
-    padding: 20px;
-    border-radius: 5px;
-    width: 300px;
-    margin: 15% auto;
-    text-align: center;
-    position: relative;
-}
-
-.popup-content .close {
-    position: absolute;
-    top: 5px;
-    right: 10px;
-    cursor: pointer;
-    font-size: 20px;
-}
-
-
 /* ===== Dashboard Moderne ===== */
 .dashboard-container {
     background: rgba(10, 4, 43, 0.95);

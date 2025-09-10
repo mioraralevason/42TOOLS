@@ -7,6 +7,7 @@
     <link rel="stylesheet" th:href="@{/css/home.css}">
     <link rel="stylesheet" th:href="@{/css/sidebar.css}">
     <link rel="stylesheet" th:href="@{/css/checking.css}">
+    <link rel="stylesheet" th:href="@{/css/popup-error.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 </head>
 <body>
@@ -21,7 +22,7 @@
         <div th:fragment="checking-user" class="contact-card">
             <form id="checkingForm" method="post" action="/checkUser">
                 <div class="date-group">
-                    <div class="date-input-wrapper">
+                    <div th:if="${session.kind == 'admin'}" class="date-input-wrapper">
                         <label for="userId">Student Login</label>
                         <input type="text"
                                class="user-input date-input"
@@ -30,6 +31,12 @@
                                th:value="${login}"
                                required>
                     </div>
+                    <input type="hidden"
+                            class="user-input date-input"
+                            name="login"
+                            id="userId"
+                            th:value="${session.userResponse.login}"
+                            th:unless="${session.kind == 'admin'}">
                     <div class="date-input-wrapper">
                         <label for="startDate">Start Date</label>
                         <input type="date"
@@ -71,7 +78,7 @@
                         <div class="stat-label">Day(s) of Attendance</div>
                     </div>
                     <div class="stat-card main-stat">
-                        <div class="stat-number" th:text="${hourCount ?: 0}">0</div>
+                        <div class="stat-number" th:text="${#numbers.formatDecimal(hourCount ?: 0, 1, 2)}">0.00</div>
                         <div class="stat-label">Hour(s) of Attendance</div>
                     </div>
                     <div class="stat-card">
@@ -128,6 +135,8 @@
             </div>
         </div>
     </main>
+    <!-- Popup d'erreur -->
+    <div th:replace="fragments/error :: error"></div>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -148,21 +157,25 @@ $(document).ready(function() {
         const startDate = $(this).find('input[name="startDate"]').val();
         const endDate = $(this).find('input[name="endDate"]').val();
 
-        if (!startDate || !endDate) {
-            alert('Please fill in both start and end dates.');
-            e.preventDefault();
-            return;
-        }
-
-        if (new Date(endDate) < new Date(startDate)) {
-            alert('End date must be on or after start date.');
-            e.preventDefault();
-            return;
-        }
-
         $(this).find('button[type="submit"]').prop('disabled', true);
         $('#loader').show();
     });
+});
+
+// Gestion popup d’erreur
+document.addEventListener("DOMContentLoaded", function() {
+    const popup = document.getElementById("errorPopup");
+    if (popup) {
+        popup.style.display = "block";
+        popup.querySelector(".close").onclick = function() {
+            popup.style.display = "none";
+        };
+        window.onclick = function(event) {
+            if (event.target === popup) {
+                popup.style.display = "none";
+            }
+        };
+    }
 });
 </script>
 </body>

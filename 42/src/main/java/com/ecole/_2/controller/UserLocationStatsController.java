@@ -94,7 +94,7 @@ public class UserLocationStatsController {
         } catch (Exception e) {
             logger.error("Error during freeze processing for userId: {}", userId, e);
             model.addAttribute("error", "Error retrieving data: " + e.getMessage());
-            return new CertificateController().auth(model, session);
+            return getLocationsStatsBegin(session,model);
         }
         
         return "freeze-page";

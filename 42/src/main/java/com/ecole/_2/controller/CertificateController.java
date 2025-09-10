@@ -1,7 +1,11 @@
 package com.ecole._2.controller;
 
+import com.ecole._2.models.CursusUser;
 import com.ecole._2.models.User;
+import com.ecole._2.services.ApiService;
 import com.ecole._2.services.CertificateService;
+import com.ecole._2.services.UserCursusService;
+
 import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +30,12 @@ public class CertificateController {
     @Autowired
     private CertificateService certificateService;
 
+    @Autowired
+    private UserCursusService userCursusService;
+
+    @Autowired
+    private ApiService apiService;
+
     /**
      * Endpoint pour générer le certificat.
      * NOTE: 'lang' est optional pour éviter l'exception Spring si quelqu'un appelle l'URL
@@ -46,35 +56,35 @@ public class CertificateController {
                 Map<String, String> error = new HashMap<>();
                 error.put("error", "Session expired. Please log in again.");
                 return ResponseEntity.status(401)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .body(error);
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(error);
             }
-
+            
             // Si l'utilisateur n'est pas admin, on force le login de session (sécurité)
             if (!"admin".equals(session.getAttribute("kind"))) {
                 login = user.getLogin();
             }
-
+            
             if (login == null || login.trim().isEmpty()) {
                 Map<String, String> error = new HashMap<>();
                 error.put("error", "Login is required to generate the certificate.");
                 return ResponseEntity.status(400)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .body(error);
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(error);
             }
-
-
-             System.out.println("langue choisi: "+ lang);
+            
+            
+            System.out.println("langue choisi: "+ lang);
             // Validation/langue : on exige explicitement "fr" ou "en"
             if (lang == null || (!"fr".equalsIgnoreCase(lang) && !"en".equalsIgnoreCase(lang))) {
                 Map<String, String> error = new HashMap<>();
                 error.put("error", "Invalid or missing 'lang' parameter. Use 'fr' or 'en'.");
                 return ResponseEntity.status(400)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .body(error);
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(error);
             }
             String langNormalized = lang.toLowerCase();
-
+            
             // Normalisation signer_par : accepte valeurs FR ou EN envoyées par le formulaire
             String signerNormalized = "Aucune"; // valeur canonique par défaut
             if (signerPar != null) {
@@ -90,11 +100,11 @@ public class CertificateController {
                     signerNormalized = "Aucune";
                 }
             }
-
+            
             logger.info("Génération certificat: login={}, signer_par={}, lang={}", login, signerNormalized, langNormalized);
-
+            
             Resource pdf = certificateService.generateCertificate(login, signerNormalized, langNormalized);
-
+            
             String filename = "school_certificate_" + login + "_" + langNormalized + ".pdf";
             return ResponseEntity.ok()
                     .contentType(MediaType.APPLICATION_PDF)
@@ -135,10 +145,46 @@ public class CertificateController {
         }
         model.addAttribute("userResponse", userResponse);
 
-        // For testing: force admin mode (si tu veux retirer ceci en prod)
-        model.addAttribute("kind", "admin");
-        session.setAttribute("kind", "admin");
+        // String kind = determineUserKind(userResponse);
+        String kind = "admin";
+        
+        model.addAttribute("kind", kind);
+        session.setAttribute("kind", kind);
+        // try {
+        //     String tokenAdmin = apiService.getAccessToken();
+        //     CursusUser userCursus = userCursusService.getUserCursus(userResponse.getId(), tokenAdmin).filterByGrade("Cadet");
+        // } catch (Exception e) {
+        //     logger.error("Error during freeze processing for userId: {}", userResponse.getId(), e);
+        //     model.addAttribute("error", "Error retrieving data: " + e.getMessage());
+        //     return "error-page";
+        // }
 
         return "certificat-page";
+    }
+
+    private String determineUserKind(User user) {
+        if (user.getKind() != null) {
+            return user.getKind();
+        }
+
+        if (isAdminUser(user)) {
+            return "admin";
+        }
+        
+        return "student";
+    }
+
+    private boolean isAdminUser(User user) {
+        String[] adminLogins = {"admin", "root", "supervisor"};
+        
+        if (user.getLogin() != null) {
+            for (String adminLogin : adminLogins) {
+                if (user.getLogin().toLowerCase().contains(adminLogin)) {
+                    return true;
+                }
+            }
+        }
+        
+        return false;
     }
 }

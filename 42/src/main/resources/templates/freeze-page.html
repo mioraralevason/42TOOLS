@@ -9,47 +9,65 @@
     <link rel="stylesheet" th:href="@{/css/home.css}">
     <!-- CSS Sidebar -->
     <link rel="stylesheet" th:href="@{/css/sidebar.css}">
+    <!-- Popup error css -->
+    <link rel="stylesheet" th:href="@{/css/popup-error.css}">
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 </head>
 <body>
 
-    <div class="container">
-        <!-- Hover area to trigger sidebar -->
-        <div class="hover-area"></div>
+<div class="container">
+    <!-- Hover area to trigger sidebar -->
+    <div class="hover-area"></div>
 
-        <!-- Sidebar -->
-        <div th:replace="fragments/sidebar :: sidebar"></div>
+    <!-- Sidebar -->
+    <div th:replace="fragments/sidebar :: sidebar"></div>
 
-        <!-- Principal content -->
-        <main class="content">
+    <!-- Principal content -->
+    <main class="content">
 
-            <!-- Header -->
-            <div th:replace="fragments/header :: header"></div>
+        <!-- Header -->
+        <div th:replace="fragments/header :: header"></div>
 
-            <!-- Freeze -->
-            <div th:replace="fragments/freeze :: freeze"></div>
+        <!-- Freeze -->
+        <div th:replace="fragments/freeze :: freeze"></div>
 
-            <!-- Popup d'erreur -->
-            <div th:replace="fragments/error :: error"></div>
-        </main>
-    </div>
+        <!-- Popup d'erreur -->
+        <div th:replace="fragments/error :: error"></div>
+    </main>
+</div>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
-        $(document).ready(function() {
-            const $sidebar = $('.sidebar');
-            const $hoverArea = $('.hover-area');
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function() {
+        const $sidebar = $('.sidebar');
+        const $hoverArea = $('.hover-area');
 
-            $hoverArea.on('mouseenter', function() {
-                $sidebar.addClass('visible');
-            });
-
-            $sidebar.on('mouseleave', function() {
-                $sidebar.removeClass('visible');
-            });
+        $hoverArea.on('mouseenter', function() {
+            $sidebar.addClass('visible');
         });
-    </script>
+
+        $sidebar.on('mouseleave', function() {
+            $sidebar.removeClass('visible');
+        });
+    });
+
+    // Gestion popup d’erreur
+    document.addEventListener("DOMContentLoaded", function() {
+        const popup = document.getElementById("errorPopup");
+        if (popup) {
+            popup.style.display = "block";
+            popup.querySelector(".close").onclick = function() {
+                popup.style.display = "none";
+            };
+            window.onclick = function(event) {
+                if (event.target === popup) {
+                    popup.style.display = "none";
+                }
+            };
+        }
+    });
+</script>
     
 </body>
 </html>
