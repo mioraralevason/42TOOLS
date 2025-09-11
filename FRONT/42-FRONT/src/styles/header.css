@@ -1,0 +1,171 @@
+/* ===== Header Fixe ===== */
+.profile-card {
+    background: #0a042b;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    color: #fff;
+    flex-wrap: wrap; /* pour responsive */
+
+    /* Fixer en haut */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+
+    /* Ombre pour séparer du contenu */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+/* Profile Info */
+.profile-info {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.profile-pic {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    margin-right: 20px;
+    border: 2px solid #00fff2;
+    object-fit: cover;
+}
+
+.name-status {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 150px;
+}
+
+.name-status h1 {
+    margin: 0;
+    font-size: 1.5em;
+}
+
+.username {
+    margin: 5px 0 0 0;
+    color: #888;
+}
+
+/* Section Logo */
+.logo-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+.logo-img {
+    width: 230px;
+    height: auto;
+}
+
+/* ===== Responsive Tablette ===== */
+@media (max-width: 768px) {
+    .profile-card {
+        flex-direction: column;
+        align-items: center;
+        padding: 15px;
+    }
+    .profile-info {
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    .profile-pic {
+        width: 100px;
+        height: 100px;
+        margin-right: 0;
+        margin-bottom: 10px;
+    }
+    .name-status h1 {
+        font-size: 1.2em;
+        text-align: center;
+    }
+    .username {
+        text-align: center;
+    }
+    .logo-img {
+        width: 150px;
+        margin-top: 10px;
+    }
+}
+
+/* ===== Responsive Mobile ===== */
+@media (max-width: 480px) {
+    .profile-pic {
+        width: 80px;
+        height: 80px;
+    }
+    .logo-img {
+        width: 120px;
+    }
+    .name-status h1 {
+        font-size: 1rem;
+    }
+    .username {
+        font-size: 0.9rem;
+    }
+}
+
+/* ===== Header Sticky ===== */
+header {
+    position: sticky; /* reste en haut lors du scroll */
+    top: 0;
+    width: 100%;
+    background-color: rgba(22, 23, 29, 0.95);
+    color: #00ffcc;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 30px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    z-index: 1000;
+    flex-wrap: wrap; /* pour responsive */
+}
+
+header h1 {
+    font-size: 1.8rem;
+    margin: 0;
+}
+
+header nav a {
+    color: #00ffcc;
+    text-decoration: none;
+    margin-left: 20px;
+    font-weight: 600;
+    transition: 0.3s;
+}
+
+header nav a:hover {
+    color: #ffffff;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+    header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    header nav {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        margin-top: 10px;
+    }
+
+    header nav a {
+        margin: 5px 0;
+    }
+}
+
+@media (max-width: 480px) {
+    header h1 {
+        font-size: 1.5rem;
+    }
+}

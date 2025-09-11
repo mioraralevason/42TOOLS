@@ -1,0 +1,115 @@
+/* ===== Sidebar Fixe ===== */
+.sidebar {
+  width: 250px;
+  background-color: #16171d;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: -250px; /* hors écran par défaut */
+  padding-top: 0; /* plus de décalage, logo tout en haut */
+  overflow-y: auto;
+  color: #fff;
+  box-shadow: 2px 0 10px rgba(0,0,0,0.5);
+  transition: left 0.3s ease;
+  z-index: 1000;
+}
+
+/* Afficher sidebar */
+.sidebar.visible {
+    left: 0;
+}
+
+/* Liste de liens */
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar ul li {
+    position: relative;
+}
+
+.sidebar ul li a {
+    display: block;
+    padding: 10px 20px;
+    color: #fff;
+    text-decoration: none;
+    transition: background 0.3s;
+}
+
+.sidebar ul li a:hover {
+    background-color: #444;
+}
+
+/* Sous-menu */
+.sidebar ul li.has-submenu > .submenu {
+    display: none;
+    background-color: #333;
+}
+
+.sidebar ul li.has-submenu:hover > .submenu {
+    display: block;
+}
+
+.sidebar ul li .submenu li a {
+    padding-left: 40px;
+}
+
+/* Icônes */
+.sidebar i {
+    margin-right: 10px;
+}
+
+/* ===== Hover Area Invisible ===== */
+.hover-area {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 20px; /* Bande à survoler pour faire apparaître la sidebar */
+    height: 100vh;
+    z-index: 1001;
+    cursor: pointer;
+}
+
+/* ===== Responsive Tablette ===== */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 200px;
+        height: 100vh;
+        left: -200px;
+        padding-top: 120px;
+    }
+
+    .sidebar ul li .submenu li a {
+        padding-left: 25px;
+    }
+}
+
+/* ===== Responsive Mobile ===== */
+@media (max-width: 480px) {
+    .sidebar {
+        width: 180px;
+        left: -180px;
+        padding-top: 100px;
+    }
+
+    .sidebar ul li .submenu li a {
+        padding-left: 20px;
+    }
+}
+
+/* Logo en haut, sans padding */
+.sidebar-logo {
+  text-align: center;
+  padding: 10px 0; /* petit padding pour l'image */
+  border-bottom: 1px solid #333;
+}
+
+.sidebar-logo img {
+  width: 150px;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto; /* centrer l'image */
+}
