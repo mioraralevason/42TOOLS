@@ -1,12 +1,8 @@
 package com.ecole._2.controller;
 
-import com.ecole._2.models.CursusUser;
-import com.ecole._2.models.User;
-import com.ecole._2.services.ApiService;
-import com.ecole._2.services.CertificateService;
-import com.ecole._2.services.UserCursusService;
+import java.util.HashMap;
+import java.util.Map;
 
-import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,8 +15,12 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import java.util.HashMap;
-import java.util.Map;
+import com.ecole._2.models.User;
+import com.ecole._2.services.ApiService;
+import com.ecole._2.services.CertificateService;
+import com.ecole._2.services.UserCursusService;
+
+import jakarta.servlet.http.HttpSession;
 
 @Controller
 public class CertificateController {
@@ -35,6 +35,8 @@ public class CertificateController {
 
     @Autowired
     private ApiService apiService;
+
+    private static final String FRONT_URL = "http://localhost:5173";
 
     /**
      * Endpoint pour générer le certificat.
@@ -137,29 +139,20 @@ public class CertificateController {
     }
 
     @GetMapping("/certificate")
-    public String auth(Model model, HttpSession session) {
+    public String auth(HttpSession session) {
         User userResponse = (User) session.getAttribute("userResponse");
 
         if (userResponse == null) {
+            logger.warn("No user in session, redirecting to login");
             return "redirect:/login";
         }
-        model.addAttribute("userResponse", userResponse);
 
-        // String kind = determineUserKind(userResponse);
-        String kind = "admin";
-        
-        model.addAttribute("kind", kind);
+        String kind = determineUserKind(userResponse);
         session.setAttribute("kind", kind);
-        // try {
-        //     String tokenAdmin = apiService.getAccessToken();
-        //     CursusUser userCursus = userCursusService.getUserCursus(userResponse.getId(), tokenAdmin).filterByGrade("Cadet");
-        // } catch (Exception e) {
-        //     logger.error("Error during freeze processing for userId: {}", userResponse.getId(), e);
-        //     model.addAttribute("error", "Error retrieving data: " + e.getMessage());
-        //     return "error-page";
-        // }
+        logger.info("User {} (kind: {}) redirected to certificate page", userResponse.getLogin(), kind);
 
-        return "certificat-page";
+        // Redirect to React frontend route
+        return "redirect:" + FRONT_URL + "/certificate";
     }
 
     private String determineUserKind(User user) {
