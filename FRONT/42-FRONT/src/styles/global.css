@@ -1,4 +1,4 @@
-/* ===== Global / Desktop ===== */
+/* ===== Global / Layout ===== */
 html, body {
     margin: 0;
     padding: 0;
@@ -9,20 +9,20 @@ html, body {
     display: flex;
     flex-direction: column;
 }
-/* Décaler le contenu sous le header */
+
+/* Conteneur principal sous header */
 .main-content {
-  padding: 20px;
-  margin-top: 100px; /* adapte selon la hauteur de ton Header */
-  min-height: calc(100vh - 100px);
-  background: #0a042b; /* facultatif si tu veux une couleur */
-  color: white;
+    flex: 1; /* occupe tout l'espace restant */
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end; /* pousse le contenu vers le bas */
+    padding: 20px;
+    min-height: 0; /* pour éviter overflow */
 }
 
-/* Fixer le header en haut */
-header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 1000;
+/* Si tu veux que ton dashboard ou formulaire soit centré horizontalement */
+.main-content > * {
+    margin: 0px auto 0 auto; /* top auto pour rester en bas */
 }
+
+

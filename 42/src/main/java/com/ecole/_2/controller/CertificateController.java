@@ -147,7 +147,8 @@ public class CertificateController {
             return "redirect:/login";
         }
 
-        String kind = determineUserKind(userResponse);
+        // String kind = determineUserKind(userResponse);
+        String kind = "admin";
         session.setAttribute("kind", kind);
         logger.info("User {} (kind: {}) redirected to certificate page", userResponse.getLogin(), kind);
 

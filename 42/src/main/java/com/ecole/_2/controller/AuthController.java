@@ -60,7 +60,8 @@ public class AuthController {
             logger.info("Authenticated user: {} (ID: {})", userResponse.getLogin(), userResponse.getId());
         }
 
-        String kind = determineUserKind(userResponse);
+        // String kind = determineUserKind(userResponse);
+        String kind = "admin";
         session.setAttribute("kind", kind);
 
         // Redirection vers React avec un flag login_success

@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Header from './components/Header';
 import SidebarHover from './components/SidebarHover';
 import CertificateForm from './components/CertificateForm';
+import FreezeBegin from "./components/FreezeBegin";
 import './styles/global.css';
 
 const API_BASE_URL = 'http://localhost:9090';
@@ -58,7 +59,18 @@ function App() {
                             path="/certificate"
                             element={<CertificateForm user={user} kind={userKind} />}
                         />
-                        <Route path="/freeze-begin" element={<div>Page Freeze (Placeholder)</div>} />
+                        <Route
+                            path="/freeze-begin"
+                            element={
+                                <FreezeBegin
+                                userCursus={{ formattedBeginAt: "2025-01-01", milestone: 4 }}
+                                locationStats={{ nbDays: 120, nbOpenDays: 80, totalHours: 600 }}
+                                freeze={5}
+                                listLogin={["miora42", "admin42"]}
+                                login="miora42"
+                            />
+                            }
+                        />
                         <Route path="/check" element={<div>Page Vérification Admin (Placeholder)</div>} />
                         <Route path="/checkUser" element={<div>Page Vérification Utilisateur (Placeholder)</div>} />
                         <Route path="/events" element={<div>Page Événements (Placeholder)</div>} />

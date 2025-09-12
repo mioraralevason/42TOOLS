@@ -1,115 +1,149 @@
-/* ===== Sidebar Fixe ===== */
+/* ===== Sidebar ===== */
 .sidebar {
-  width: 250px;
-  background-color: #16171d;
-  height: 100vh;
-  position: fixed;
-  top: 0;
-  left: -250px; /* hors écran par défaut */
-  padding-top: 0; /* plus de décalage, logo tout en haut */
-  overflow-y: auto;
-  color: #fff;
-  box-shadow: 2px 0 10px rgba(0,0,0,0.5);
-  transition: left 0.3s ease;
-  z-index: 1000;
-}
-
-/* Afficher sidebar */
-.sidebar.visible {
+    position: fixed;
+    top: 0;
     left: 0;
+    width: 250px;
+    height: 100vh;
+    background: #0a042b;
+    color: #fff;
+    padding: 20px 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Toujours push footer/bas */
+    z-index: 1000;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
 }
 
-/* Liste de liens */
+.sidebar.visible {
+    transform: translateX(0);
+}
+
+.sidebar-logo img {
+    max-width: 100%;
+    height: auto;
+    margin-bottom: 20px;
+}
+
 .sidebar ul {
     list-style: none;
     padding: 0;
     margin: 0;
+    flex: 1; /* prend tout l’espace restant */
 }
 
 .sidebar ul li {
-    position: relative;
+    margin-bottom: 15px;
 }
 
 .sidebar ul li a {
-    display: block;
-    padding: 10px 20px;
-    color: #fff;
+    display: flex;
+    align-items: center;
+    color: #00ffcc;
     text-decoration: none;
-    transition: background 0.3s;
+    font-weight: 600;
+    padding: 8px 10px;
+    border-radius: 6px;
+    transition: 0.3s;
 }
 
 .sidebar ul li a:hover {
-    background-color: #444;
+    background: rgba(0, 255, 204, 0.1);
+    color: #ffffff;
 }
 
-/* Sous-menu */
-.sidebar ul li.has-submenu > .submenu {
+.sidebar ul li.has-submenu ul.submenu {
     display: none;
-    background-color: #333;
+    margin-top: 5px;
+    margin-left: 15px;
 }
 
-.sidebar ul li.has-submenu:hover > .submenu {
+.sidebar ul li.has-submenu:hover ul.submenu {
     display: block;
 }
 
-.sidebar ul li .submenu li a {
-    padding-left: 40px;
+.sidebar ul li.has-submenu ul.submenu li {
+    margin-bottom: 10px;
 }
 
-/* Icônes */
-.sidebar i {
-    margin-right: 10px;
-}
-
-/* ===== Hover Area Invisible ===== */
+/* Hover invisible zone */
 .hover-area {
     position: fixed;
     top: 0;
     left: 0;
-    width: 20px; /* Bande à survoler pour faire apparaître la sidebar */
+    width: 30px;
     height: 100vh;
-    z-index: 1001;
-    cursor: pointer;
+    z-index: 998;
 }
 
-/* ===== Responsive Tablette ===== */
+/* ===== Responsive ===== */
+@media (max-width: 1024px) {
+    .sidebar {
+        width: 220px;
+        padding: 15px;
+    }
+    .sidebar ul li a {
+        font-size: 0.9rem;
+    }
+}
+
 @media (max-width: 768px) {
     .sidebar {
-        width: 200px;
-        height: 100vh;
-        left: -200px;
-        padding-top: 120px;
+        transform: translateX(-100%);
+        position: fixed;
+        bottom: 0; /* Collé en bas si moins haut que viewport */
+        height: auto;
+        max-height: 90vh;
+        overflow-y: auto;
     }
 
-    .sidebar ul li .submenu li a {
-        padding-left: 25px;
+    .sidebar.visible {
+        transform: translateX(0);
+    }
+
+    .hover-area {
+        width: 40px;
+    }
+
+    .sidebar-logo img {
+        width: 80%;
+        margin: 0 auto 15px auto;
+    }
+
+    .sidebar ul li a {
+        font-size: 1rem;
+        justify-content: flex-start;
     }
 }
 
-/* ===== Responsive Mobile ===== */
 @media (max-width: 480px) {
     .sidebar {
         width: 180px;
-        left: -180px;
-        padding-top: 100px;
+        padding: 10px;
     }
-
-    .sidebar ul li .submenu li a {
-        padding-left: 20px;
+    .sidebar ul li a {
+        font-size: 0.9rem;
+        padding: 6px 8px;
     }
 }
 
-/* Logo en haut, sans padding */
-.sidebar-logo {
-  text-align: center;
-  padding: 10px 0; /* petit padding pour l'image */
-  border-bottom: 1px solid #333;
+/* ===== Footer du sidebar (éléments bas) ===== */
+.sidebar-footer {
+    margin-top: auto; /* pousse tout en bas */
+    padding-top: 20px;
+    border-top: 1px solid rgba(0, 255, 204, 0.2);
 }
 
+/* ===== Icons FontAwesome ===== */
+.sidebar ul li a svg {
+    margin-right: 8px;
+}
+
+/* ===== Smooth transitions ===== */
+.sidebar,
+.sidebar ul li a,
 .sidebar-logo img {
-  width: 150px;
-  height: auto;
-  object-fit: contain;
-  display: block;
-  margin: 0 auto; /* centrer l'image */
+    transition: all 0.3s ease;
 }
