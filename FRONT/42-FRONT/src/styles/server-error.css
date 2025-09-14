@@ -1,0 +1,121 @@
+:root {
+  --gb: #F2EEE8;
+  --wh: #FFFFFF;
+  --dark: #383A41;
+  --red: #EB6D6D;
+  --blue: #5E7FDC;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100vh;
+  background-color: var(--gb);
+  font-family: 'Open Sans', sans-serif;
+}
+
+.face {
+  width: 300px;
+  height: 300px;
+  border: 4px solid var(--dark);
+  border-radius: 10px;
+  background-color: var(--wh);
+  margin: 0 auto;
+  margin-top: 100px;
+}
+
+.band {
+  width: 350px;
+  height: 27px;
+  border: 4px solid var(--dark);
+  border-radius: 5px;
+  margin-left: -25px;
+  margin-top: 50px;
+  display: flex;
+  flex-direction: column;
+}
+
+.band .red { height: 33.33%; width: 100%; background-color: var(--red); }
+.band .white { height: 33.33%; width: 100%; background-color: var(--wh); }
+.band .blue { height: 33.33%; width: 100%; background-color: var(--blue); }
+
+.eyes {
+  width: 128px;
+  margin: 0 auto;
+  margin-top: 40px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.eyes:before, .eyes:after {
+  content: "";
+  display: inline-block;
+  width: 30px;
+  height: 15px;
+  border: 7px solid var(--dark);
+  border-top-left-radius: 22px;
+  border-top-right-radius: 22px;
+  border-bottom: 0;
+}
+
+.dimples {
+  width: 180px;
+  margin: 0 auto;
+  margin-top: 15px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.dimples:before, .dimples:after {
+  content: "";
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: rgba(235,109,109,0.4);
+}
+
+.mouth {
+  width: 40px;
+  height: 5px;
+  border-radius: 5px;
+  background-color: var(--dark);
+  margin: 0 auto;
+  margin-top: 25px;
+}
+
+h1 {
+  font-weight: 800;
+  color: var(--gb);
+  text-align: center;
+  font-size: 2.5em;
+  padding-top: 20px;
+}
+
+.btn {
+  font-weight: 400;
+  padding: 20px;
+  background-color: var(--blue);
+  color: white;
+  width: 320px;
+  margin: 0 auto;
+  text-align: center;
+  font-size: 1.2em;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 80px;
+  margin-bottom: 50px;
+  transition: all .2s linear;
+}
+
+.btn:hover {
+  background-color: rgba(94,127,220,0.8);
+}
+
+/* Responsive */
+@media screen and (max-width: 400px) {
+  .face { transform: scale(.8); margin-top: 40px; }
+  .btn { width: 200px; margin-top: 60px; margin-bottom: 50px; }
+  h1 { font-size: 2em; padding-left: 20px; padding-right: 20px; }
+}

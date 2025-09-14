@@ -98,3 +98,31 @@
         font-size: 0.7rem;
     }
 }
+
+/* ===== Header / Profile Card Icons ===== */
+.contact-icon {
+    margin-right: 8px;        /* un peu plus d'espace */
+    font-size: 1rem;          /* taille standard */
+    color: #00ffcc;           /* couleur principale */
+    transition: transform 0.2s, color 0.2s;
+    cursor: pointer;
+}
+
+.contact-icon:hover {
+    color: #ffffff;           /* couleur au survol */
+    transform: scale(1.2);    /* légère animation pour attirer l'œil */
+}
+
+/* Si tu veux que toutes les icônes dans .profile-info soient un peu plus grandes */
+.profile-info i {
+    font-size: 1.2rem;
+    margin-right: 8px;
+    color: #00ffcc;
+}
+
+.profile-info i:hover {
+    color: #ffffff;
+    transform: scale(1.3);
+    transition: all 0.2s ease-in-out;
+}
+

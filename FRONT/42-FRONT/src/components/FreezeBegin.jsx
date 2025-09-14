@@ -1,4 +1,3 @@
-// src/components/FreezeBegin.jsx
 import React, { useEffect, useState } from "react";
 import API_BASE_URL from "../config.js";
 import "../styles/freeze.css";
@@ -6,6 +5,7 @@ import "../styles/popup-error.css";
 
 const ErrorPopup = ({ error }) => {
   const [visible, setVisible] = useState(!!error);
+
   useEffect(() => {
     if (error) {
       setVisible(true);
@@ -13,7 +13,9 @@ const ErrorPopup = ({ error }) => {
       return () => clearTimeout(timer);
     }
   }, [error]);
+
   if (!visible || !error) return null;
+
   return (
     <div className="popup-error">
       <div className="popup-content">
@@ -58,7 +60,6 @@ const FreezeBegin = () => {
       setNbDays(data.nbDays || 0);
       setNbOpenDays(data.nbOpenDays || 0);
       setTotalHours(data.totalHours || 0);
-
       setIsAdmin(data.isAdmin);
     } catch (err) {
       console.error(err);
@@ -110,28 +111,42 @@ const FreezeBegin = () => {
           )}
 
           <h1 className="dashboard-title">
-            Dashboard Cursus {login && <span>{userCursus?.user.login}</span>}
+            Dashboard Cursus{" "}
+            {userCursus?.user?.login && <span>{userCursus.user.login}</span>}
           </h1>
           {loading && <p>Chargement des données...</p>}
         </div>
 
         <div className="content-area">
-          {(!userCursus && !locationStats) && !loading && (
+          {!loading && !userCursus && !locationStats && (
             <p>Aucune donnée disponible pour cet utilisateur</p>
           )}
 
           <div className="stats-grid">
             {userCursus && (
-              <div className="stat-card">
-                <div className="stat-header">
-                  <i className="fas fa-calendar-alt stat-icon"></i>
-                  <span className="stat-label">Date de début</span>
-                  <span className="stat-value">{userCursus.formattedBeginAt}</span>
+              <div className="milestone-section">
+                <div className="milestone-content">
+                  <div className="stat-header">
+                    <span className="milestone-title">Milestone Actuel</span>
+                    <span className="milestone-value">
+                      Level {userCursus.milestone}
+                    </span>
+                  </div>
                 </div>
               </div>
             )}
 
-            {locationStats && (
+            {freeze != null && (
+              <div className="stat-card freeze-card">
+                <div className="stat-header">
+                  <i className="fas fa-snowflake stat-icon"></i>
+                  <span className="stat-label">Jours de freeze</span>
+                  <span className="stat-value">{Math.floor(freeze)} jours</span>
+                </div>
+              </div>
+            )}
+
+            {isAdmin && locationStats && (
               <>
                 <div className="stat-card">
                   <div className="stat-header">
@@ -153,31 +168,12 @@ const FreezeBegin = () => {
                   <div className="stat-header">
                     <i className="fas fa-clock stat-icon"></i>
                     <span className="stat-label">Total d'heures</span>
-                    <span className="stat-value">{Math.floor(totalHours)}h</span>
+                    <span className="stat-value">
+                      {Math.floor(totalHours)}h
+                    </span>
                   </div>
                 </div>
               </>
-            )}
-
-            {userCursus && (
-              <div className="milestone-section">
-                <div className="milestone-content">
-                  <div className="stat-header">
-                    <span className="milestone-title">Milestone Actuel</span>
-                    <span className="milestone-value">Level {userCursus.milestone}</span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {freeze != null && (
-              <div className="stat-card freeze-card">
-                <div className="stat-header">
-                  <i className="fas fa-snowflake stat-icon"></i>
-                  <span className="stat-label">Jours de freeze</span>
-                  <span className="stat-value">{Math.floor(freeze)} jours</span>
-                </div>
-              </div>
             )}
           </div>
         </div>

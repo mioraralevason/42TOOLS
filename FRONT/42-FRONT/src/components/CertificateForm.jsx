@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import '../styles/certificate-form.css'; // Importation du CSS dédié
+import '../styles/certificate-form.css';
+import API_BASE_URL from "../config";
 
 const CertificateForm = ({ user, kind }) => {
     const [login, setLogin] = useState(kind === 'admin' ? '' : user.login);
@@ -15,7 +16,7 @@ const CertificateForm = ({ user, kind }) => {
 
         try {
             const response = await fetch(
-                `http://localhost:9090/certificate-generator?login=${encodeURIComponent(login)}&signer_par=${encodeURIComponent(signerPar)}&lang=${encodeURIComponent(lang)}`,
+                `${API_BASE_URL}/certificate-generator?login=${encodeURIComponent(login)}&signer_par=${encodeURIComponent(signerPar)}&lang=${encodeURIComponent(lang)}`,
                 {
                     method: 'GET',
                     credentials: 'include',
@@ -44,7 +45,14 @@ const CertificateForm = ({ user, kind }) => {
 
     return (
         <div className="contact-card">
-            {error && <div className="popup-error"><div className="popup-content"><p>{error}</p><span className="close">&times;</span></div></div>}
+            {error && (
+                <div className="popup-error">
+                    <div className="popup-content">
+                        <p>{error}</p>
+                        <span className="close">&times;</span>
+                    </div>
+                </div>
+            )}
             <form method="get" onSubmit={handleSubmit}>
                 {kind === 'admin' ? (
                     <input
@@ -59,6 +67,7 @@ const CertificateForm = ({ user, kind }) => {
                 ) : (
                     <input type="hidden" name="login" value={user.login} />
                 )}
+
                 <div className="sel sel--black-panther">
                     <select
                         name="signer_par"
@@ -72,6 +81,7 @@ const CertificateForm = ({ user, kind }) => {
                         <option value="assistant">Assistant</option>
                     </select>
                 </div>
+
                 <div className="sel sel--black-panther">
                     <select
                         name="lang"
@@ -87,13 +97,17 @@ const CertificateForm = ({ user, kind }) => {
                         <option value="en">Anglais</option>
                     </select>
                 </div>
+
                 <button type="submit" className="codepen-button" disabled={loading}>
                     <span>{loading ? 'Génération...' : 'Générer le Certificat'}</span>
                 </button>
-                <div id="loader" style={{ display: loading ? 'block' : 'none', marginTop: '20px', textAlign: 'center' }}>
-                    <div className="spinner"></div>
-                    <div style={{ color: '#00ffcc', marginTop: '5px' }}>Génération en cours...</div>
-                </div>
+
+                {loading && (
+                    <div id="loader" style={{ marginTop: '20px', textAlign: 'center' }}>
+                        <div className="spinner"></div>
+                        <div style={{ color: '#00ffcc', marginTop: '5px' }}>Génération en cours...</div>
+                    </div>
+                )}
             </form>
         </div>
     );
