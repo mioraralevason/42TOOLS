@@ -14,17 +14,15 @@ import {
 const SidebarHover = ({ userKind, sidebarVisible, setSidebarVisible }) => {
   return (
     <>
-      {/* Zone de survol invisible */}
-      <div
-        className="hover-area"
-        onMouseEnter={() => setSidebarVisible(true)}
-      ></div>
-
-      <aside
-        className={`sidebar ${sidebarVisible ? "visible" : ""}`}
-        onMouseLeave={() => setSidebarVisible(false)}
+      {/* Button toggle mobile */}
+      <button 
+        className="sidebar-toggle-btn" 
+        onClick={() => setSidebarVisible(!sidebarVisible)}
       >
-        {/* Logo tout en haut */}
+        ☰
+      </button>
+
+      <aside className={`sidebar ${sidebarVisible ? "visible" : ""}`}>
         <div className="sidebar-logo">
           <img src="/images/logo.png" alt="Logo" />
         </div>
@@ -32,30 +30,35 @@ const SidebarHover = ({ userKind, sidebarVisible, setSidebarVisible }) => {
         <ul>
           <li>
             <a href="/certificate">
-              <FontAwesomeIcon icon={faHome} /> Certificat Scolarite
+              <FontAwesomeIcon icon={faHome} />
+              <span>Certificat Scolarite</span>
             </a>
           </li>
           <li>
             <a href="/freeze-begin">
-              <FontAwesomeIcon icon={faSnowflake} /> Freeze
+              <FontAwesomeIcon icon={faSnowflake} />
+              <span>Freeze</span>
             </a>
           </li>
           <li className="has-submenu">
             <a href="#">
-              <FontAwesomeIcon icon={faCheckSquare} /> Checking{" "}
+              <FontAwesomeIcon icon={faCheckSquare} />
+              <span>Checking</span>
               <FontAwesomeIcon icon={faCaretDown} />
             </a>
             <ul className="submenu">
               {userKind === "admin" && (
                 <li>
                   <a href="/check">
-                    <FontAwesomeIcon icon={faShieldAlt} /> Admin
+                    <FontAwesomeIcon icon={faShieldAlt} />
+                    <span>Admin</span>
                   </a>
                 </li>
               )}
               <li>
                 <a href="/checkUser">
-                  <FontAwesomeIcon icon={faUser} /> User
+                  <FontAwesomeIcon icon={faUser} />
+                  <span>User</span>
                 </a>
               </li>
             </ul>
@@ -63,7 +66,8 @@ const SidebarHover = ({ userKind, sidebarVisible, setSidebarVisible }) => {
           {userKind === "admin" && (
             <li>
               <a href="/events">
-                <FontAwesomeIcon icon={faCalendar} /> Events
+                <FontAwesomeIcon icon={faCalendar} />
+                <span>Events</span>
               </a>
             </li>
           )}

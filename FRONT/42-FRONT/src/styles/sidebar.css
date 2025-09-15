@@ -3,22 +3,23 @@
     position: fixed;
     top: 0;
     left: 0;
-    width: 250px;
+    width: 60px; /* réduit par défaut */
     height: 100vh;
     background: #0a042b;
     color: #fff;
-    padding: 20px 10px;
+    padding: 20px 5px;
     display: flex;
     flex-direction: column;
-    justify-content: space-between; /* Toujours push footer/bas */
+    justify-content: space-between;
     z-index: 1000;
-    transform: translateX(-100%);
-    transition: transform 0.3s ease;
+    transition: all 0.3s ease;
     box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
 }
 
-.sidebar.visible {
-    transform: translateX(0);
+.sidebar:hover {
+    width: 250px; /* s’élargit au hover */
+    padding: 20px 10px;
 }
 
 .sidebar-logo img {
@@ -31,7 +32,7 @@
     list-style: none;
     padding: 0;
     margin: 0;
-    flex: 1; /* prend tout l’espace restant */
+    flex: 1;
 }
 
 .sidebar ul li {
@@ -49,9 +50,15 @@
     transition: 0.3s;
 }
 
-.sidebar ul li a:hover {
-    background: rgba(0, 255, 204, 0.1);
-    color: #ffffff;
+.sidebar ul li a span {
+    margin-left: 8px;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.sidebar:hover ul li a span {
+    opacity: 1;
 }
 
 .sidebar ul li.has-submenu ul.submenu {
@@ -64,137 +71,42 @@
     display: block;
 }
 
-.sidebar ul li.has-submenu ul.submenu li {
-    margin-bottom: 10px;
-}
-
-/* Hover invisible zone */
-.hover-area {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 30px;
-    height: 100vh;
-    z-index: 998;
-}
-
-/* ===== Responsive ===== */
-@media (max-width: 1024px) {
-    .sidebar {
-        width: 220px;
-        padding: 15px;
-    }
-    .sidebar ul li a {
-        font-size: 0.9rem;
-    }
-}
-
-@media (max-width: 768px) {
-    .sidebar {
-        transform: translateX(-100%);
-        position: fixed;
-        bottom: 0; /* Collé en bas si moins haut que viewport */
-        height: auto;
-        max-height: 90vh;
-        overflow-y: auto;
-    }
-
-    .sidebar.visible {
-        transform: translateX(0);
-    }
-
-    .hover-area {
-        width: 40px;
-    }
-
-    .sidebar-logo img {
-        width: 80%;
-        margin: 0 auto 15px auto;
-    }
-
-    .sidebar ul li a {
-        font-size: 1rem;
-        justify-content: flex-start;
-    }
-}
-
-@media (max-width: 480px) {
-    .sidebar {
-        width: 180px;
-        padding: 10px;
-    }
-    .sidebar ul li a {
-        font-size: 0.9rem;
-        padding: 6px 8px;
-    }
-}
-
-/* ===== Footer du sidebar (éléments bas) ===== */
+/* Footer */
 .sidebar-footer {
-    margin-top: auto; /* pousse tout en bas */
+    margin-top: auto;
     padding-top: 20px;
     border-top: 1px solid rgba(0, 255, 204, 0.2);
 }
 
-/* ===== Icons FontAwesome ===== */
+/* Icons */
 .sidebar ul li a svg {
-    margin-right: 8px;
-}
-
-/* ===== Smooth transitions ===== */
-.sidebar,
-.sidebar ul li a,
-.sidebar-logo img {
-    transition: all 0.3s ease;
-}
-
-/* Mode réduit */
-.sidebar.collapsed {
-    width: 60px;
-}
-
-.sidebar.collapsed .sidebar-text,
-.sidebar.collapsed .submenu {
-    display: none; /* texte et sous-menu cachés */
-}
-
-.sidebar.collapsed .sidebar-logo img {
-    display: none; /* logo caché */
-}
-
-.sidebar.collapsed .sidebar-toggle {
-    margin: 0 auto; /* bouton centré */
-}
-
-/* Mode visible */
-.sidebar.visible {
-    width: 250px;
-}
-
-.sidebar.visible .sidebar-text {
-    display: inline-block;
-}
-
-.sidebar ul li a svg {
-    display: inline-block; /* icône toujours visible */
+    margin-right: 0; /* pas d’espace quand réduit */
     font-size: 1.2rem;
-    color: #00ffcc;
-    min-width: 24px;
-    margin-right: 8px;
 }
 
-/* Transitions douces */
+/* Smooth transitions */
 .sidebar,
 .sidebar ul li a,
 .sidebar-logo img {
     transition: all 0.3s ease;
 }
 
-/* Caret rotation */
-.caret-icon {
-    margin-left: auto;
-    transition: transform 0.3s ease;
+/* Hover invisible zone */
+.hover-area {
+    display: none; /* on n'utilise plus hover sur mobile */
 }
-.has-submenu:hover .caret-icon {
-    transform: rotate(180deg);
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 60px; /* réduit par défaut */
+        padding: 10px 5px;
+        transform: translateX(-100%);
+    }
+
+    .sidebar.visible {
+        transform: translateX(0);
+        width: 250px;
+        padding: 20px 10px;
+    }
 }

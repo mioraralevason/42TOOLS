@@ -40,14 +40,6 @@ html {
     will-change: auto;
 }
 
-/* Optimisation pour les transformations */
-.sidebar,
-.profile-card,
-main,
-.stat-card,
-.modal-overlay {
-    will-change: transform;
-}
 
 /* Force hardware acceleration pour les éléments animés */
 .sidebar,
@@ -96,7 +88,7 @@ img {
 }
 
 /* Amélioration de l'accessibilité pour les utilisateurs de lecteurs d'écran */
-[aria-hidden="true"] {
+[aria-hidden="true"]:not(svg) {
     display: none !important;
 }
 
