@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import "../styles/popup-error.css";
 
 const ErrorPopup = ({ error }) => {
   const [visible, setVisible] = useState(!!error);

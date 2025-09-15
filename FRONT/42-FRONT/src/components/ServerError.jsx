@@ -1,5 +1,4 @@
 import React from "react";
-import "../styles/server-error.css";
 import API_BASE_URL from "../config";
 
 

@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from "react";
 import API_BASE_URL from "../config.js";
-import "../styles/freeze.css";
-import "../styles/popup-error.css";
 
 const ErrorPopup = ({ error }) => {
   const [visible, setVisible] = useState(!!error);

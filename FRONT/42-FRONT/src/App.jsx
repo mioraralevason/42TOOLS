@@ -5,7 +5,7 @@ import SidebarHover from './components/SidebarHover';
 import CertificateForm from './components/CertificateForm';
 import FreezeBegin from "./components/FreezeBegin";
 import ServerError from "./components/ServerError";
-import './styles/global.css';
+import './index.css';
 import API_BASE_URL from "./config";
 
 function App() {
@@ -57,7 +57,7 @@ function App() {
             <Route path="/check" element={<div>Admin Check Page (Placeholder)</div>} />
             <Route path="/checkUser" element={<div>User Check Page (Placeholder)</div>} />
             <Route path="/events" element={<div>Events Page (Placeholder)</div>} />
-            <Route path="/" element={<div>Home (Placeholder)</div>} />
+            <Route path="/" element={<CertificateForm user={user} kind={userKind} />} />
           </Routes>
         </main>
       </div>

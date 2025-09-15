@@ -199,6 +199,8 @@ public class CheckingController {
             try {
                 userStat = userLocationStatsService.getUserLocationStats(userId, token,startDate,endDate);
                 userStat.setUserName(login);
+                List<LocationStat> locationStats = userStat.filterStatsBetween(startDate, endDate);
+                userStat.setStats(locationStats);
             } catch (Exception e) {
                 logger.warn("Could not fetch stats or user data for user {}: {}", userId, e.getMessage());
                 userStat = new UserLocationStat(userId, null);

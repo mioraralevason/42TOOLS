@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import '../styles/certificate-form.css';
 import API_BASE_URL from "../config";
 
 const CertificateForm = ({ user, kind }) => {

@@ -147,3 +147,54 @@
 .sidebar-logo img {
     transition: all 0.3s ease;
 }
+
+/* Mode réduit */
+.sidebar.collapsed {
+    width: 60px;
+}
+
+.sidebar.collapsed .sidebar-text,
+.sidebar.collapsed .submenu {
+    display: none; /* texte et sous-menu cachés */
+}
+
+.sidebar.collapsed .sidebar-logo img {
+    display: none; /* logo caché */
+}
+
+.sidebar.collapsed .sidebar-toggle {
+    margin: 0 auto; /* bouton centré */
+}
+
+/* Mode visible */
+.sidebar.visible {
+    width: 250px;
+}
+
+.sidebar.visible .sidebar-text {
+    display: inline-block;
+}
+
+.sidebar ul li a svg {
+    display: inline-block; /* icône toujours visible */
+    font-size: 1.2rem;
+    color: #00ffcc;
+    min-width: 24px;
+    margin-right: 8px;
+}
+
+/* Transitions douces */
+.sidebar,
+.sidebar ul li a,
+.sidebar-logo img {
+    transition: all 0.3s ease;
+}
+
+/* Caret rotation */
+.caret-icon {
+    margin-left: auto;
+    transition: transform 0.3s ease;
+}
+.has-submenu:hover .caret-icon {
+    transform: rotate(180deg);
+}
