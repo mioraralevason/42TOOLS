@@ -1,10 +1,26 @@
-import React from "react";
+import React, { useState } from "react";
 import API_BASE_URL from "../config";
 
-
 const ServerError = () => {
-  const handleReturnHome = () => {
-    window.location.href = `${API_BASE_URL}/`;
+  const [checking, setChecking] = useState(false);
+
+  const handleReturnHome = async () => {
+    setChecking(true);
+    try {
+      // Teste le serveur via /health
+      const res = await fetch(`${API_BASE_URL}/health`);
+      if (res.ok) {
+        // Si le serveur répond, redirige vers la base
+        window.location.href = `${API_BASE_URL}/`;
+      } else {
+        alert("Le serveur est toujours indisponible.");
+      }
+    } catch (err) {
+      console.error("Server still unreachable:", err);
+      alert("Le serveur est toujours indisponible.");
+    } finally {
+      setChecking(false);
+    }
   };
 
   return (
@@ -21,7 +37,9 @@ const ServerError = () => {
       </div>
 
       <h1>Oops! Something went wrong!</h1>
-      <div className="btn" onClick={handleReturnHome}>Return to Home</div>
+      <div className="btn" onClick={handleReturnHome}>
+        {checking ? "Checking server..." : "Return to Home"}
+      </div>
     </div>
   );
 };
