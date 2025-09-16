@@ -13,18 +13,19 @@ import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
-
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-@Controller
+import java.util.HashMap;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api")
+@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 public class UserLocationStatsController {
-    
+
     private static final Logger logger = LoggerFactory.getLogger(UserLocationStatsController.class);
-    
+
     @Autowired
     private UserLocationStatsService userLocationStatsService;
 
@@ -35,120 +36,84 @@ public class UserLocationStatsController {
     private ApiService apiService;
 
     @Autowired
-    CampusUserService campusUserService;
+    private CampusUserService campusUserService;
 
-    private static final String DEFAULT_USER_ID = "211018"; 
+    private static final String DEFAULT_USER_ID = "211018";
 
     @GetMapping("/freeze")
-    public String getLocationsStats(@RequestParam(value = "login", required = false) String login, 
-                                   HttpSession session, Model model) {
-        return processFreeze(login, session, model);
-    }
+    public Map<String, Object> getFreezeData(
+            @RequestParam(value = "login", required = false) String login,
+            @RequestParam(value = "dateDebut", required = false) String dateDebut,
+            @RequestParam(value = "dateFin", required = false) String dateFin,
+            HttpSession session) {
 
-    @GetMapping("/freeze-begin")
-    public String getLocationsStatsBegin(HttpSession session, Model model) {
-        return processFreeze(null, session, model);
-    }
-    
-    private String processFreeze(String login, HttpSession session, Model model) {
-        String userId = null;
-        String kind = (String) session.getAttribute("kind");
-        
-        logger.info("Processing freeze - Login: {}, Kind: {}", login, kind);
-        
+        Map<String, Object> response = new HashMap<>();
+        String userId = determineUserId(login, (String) session.getAttribute("kind"), session);
+
         try {
-            
-            userId = determineUserId(login, kind, session);
-            
-            if (userId == null) {
-                logger.error("Unable to determine user ID");
-                model.addAttribute("error", "Unable to determine user");
-                return new CertificateController().auth(model, session);
-            }
-            
-            logger.info("User ID determined: {}", userId);
-            
-            
             String tokenAdmin = apiService.getAccessToken();
             CursusUser userCursus = userCursusService.getUserCursus(userId, tokenAdmin).filterByGrade("Cadet");
-            UserLocationStat userLocationStat = userLocationStatsService.getUserLocationStats(userId, tokenAdmin,null,null);
-            
-            
+            UserLocationStat locationStats = userLocationStatsService.getUserLocationStats(userId, tokenAdmin, null, null);
+            dateDebut = userCursus.getBegin_at();
+            // Call the method here
+            long nbDays = locationStats.getNbDays(dateDebut, null);
+            long nbOpenDays = locationStats.getNbOpenDays(dateDebut, null);
+            double totalHours = locationStats.getTotalHours(dateDebut, null);
             Freeze freeze = new Freeze();
-            freeze.setA(userLocationStat.getNbDays(userCursus.getBegin_at(), null));
-            freeze.setB(userLocationStat.getNbOpenDays(userCursus.getBegin_at(), null));
-            freeze.setC(userLocationStat.getTotalHours(userCursus.getBegin_at(), null));
+            freeze.setA(nbDays);
+            freeze.setB(nbOpenDays);
+            freeze.setC(totalHours);
             freeze.setD(userCursus.getMilestone());
 
-            
-            model.addAttribute("freeze", freeze.calculFreeze());
-            model.addAttribute("login", getStringValue(apiService.getUser(userId, tokenAdmin), "login", ""));
-            
-            
-            if ("admin".equals(kind)) {
-                model.addAttribute("locationStats", userLocationStat);
-                model.addAttribute("userCursus", userCursus);
-                model.addAttribute("listLogin", session.getAttribute("listLogin"));
-            }
-            
+            response.put("nbDays", nbDays);
+            response.put("nbOpenDays", nbOpenDays);
+            response.put("totalHours", totalHours);
+            // response.put("isAdmin", isAdminUser((User)session.getAttribute("useResponse")) );
+            response.put("isAdmin", true);
+
+            response.put("freeze", freeze.calculFreeze());
+            response.put("userCursus", userCursus);
+            response.put("locationStats", locationStats);
+
         } catch (Exception e) {
-            logger.error("Error during freeze processing for userId: {}", userId, e);
-            model.addAttribute("error", "Error retrieving data: " + e.getMessage());
-            return getLocationsStatsBegin(session,model);
+            response.put("error", e.getMessage());
         }
-        
-        return "freeze-page";
+
+        return response;
     }
-    
+
     private String determineUserId(String login, String kind, HttpSession session) {
-        logger.info("Determining ID - Login: {}, Kind: {}", login, kind);
-        
-        
         if (kind == null || !"admin".equals(kind)) {
             User sessionUser = (User) session.getAttribute("userResponse");
-            if (sessionUser != null && sessionUser.getId() != null) {
-                logger.info("Using session ID: {}", sessionUser.getId());
-                return sessionUser.getId();
-            } else {
-                logger.info("Using default ID: {}", DEFAULT_USER_ID);
-                return DEFAULT_USER_ID;
-            }
+            return (sessionUser != null && sessionUser.getId() != null) ? sessionUser.getId() : DEFAULT_USER_ID;
         }
-        
-        
+
         if ("admin".equals(kind)) {
-            
             if (login != null && !login.trim().isEmpty()) {
                 try {
-                    String foundUserId = apiService.getIdUsers(login.trim(), apiService.getAccessToken());
-                    logger.info("ID found for login {}: {}", login, foundUserId);
-                    return foundUserId;
+                    return apiService.getIdUsers(login.trim(), apiService.getAccessToken());
                 } catch (Exception e) {
-                    logger.error("Error searching for ID for login: {}", login, e);
                     throw new RuntimeException("User not found: " + login);
                 }
             } else {
-                
-                logger.info("Admin without specified login, using default admin ID");
-                return "203988"; 
+                return "203988"; // admin par défaut
             }
         }
-        
         return null;
     }
-    
+
     private String getStringValue(Map<String, Object> map, String key, String defaultValue) {
-        if (map == null) {
-            logger.warn("Map is null for key: {}", key);
-            return defaultValue;
-        }
+        if (map == null) return defaultValue;
         Object value = map.get(key);
-        if (value != null) {
-            logger.debug("Value found for {}: {}", key, value);
-            return value.toString();
-        } else {
-            logger.warn("Value is null for key: {}", key);
-            return defaultValue;
+        return value != null ? value.toString() : defaultValue;
+    }
+    private boolean isAdminUser(User user) {
+        String[] adminLogins = {"admin", "root", "supervisor"};
+        if (user.getLogin() != null) {
+            for (String adminLogin : adminLogins) {
+                if (user.getLogin().toLowerCase().contains(adminLogin)) return true;
+            }
         }
+        return false;
     }
 }

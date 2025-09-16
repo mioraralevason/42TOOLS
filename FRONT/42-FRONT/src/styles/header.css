@@ -1,0 +1,90 @@
+/* ===== Header Styles ===== */
+.profile-card {
+    position: fixed;
+    top: 0;
+    left: var(--sidebar-width-collapsed);
+    width: calc(100% - var(--sidebar-width-collapsed));
+    height: var(--header-height);
+    background: var(--primary-bg);
+    backdrop-filter: blur(20px);
+    border-bottom: 2px solid rgba(0, 255, 242, 0.3);
+    box-shadow: var(--shadow-card);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 var(--spacing-lg);
+    z-index: 900;
+    transition: var(--transition-smooth);
+}
+
+.sidebar-expanded .profile-card {
+    left: var(--sidebar-width-expanded);
+    width: calc(100% - var(--sidebar-width-expanded));
+}
+
+.profile-info {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.profile-pic {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--accent-cyan);
+    box-shadow: var(--shadow-glow-cyan);
+    transition: var(--transition-bounce);
+}
+
+.profile-pic:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 30px rgba(0, 255, 204, 0.5);
+}
+
+.name-status h1 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: var(--spacing-xs);
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.name-status .username {
+    font-size: 0.85rem;
+    color: var(--accent-blue);
+    opacity: 0.9;
+    margin-bottom: var(--spacing-xs);
+}
+
+.name-status p {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.contact-icon {
+    color: var(--accent-cyan);
+    transition: var(--transition-smooth);
+}
+
+.contact-icon:hover {
+    color: var(--text-primary);
+    transform: scale(1.1);
+}
+
+.logo-section img {
+    height: 35px;
+    filter: drop-shadow(0 0 10px rgba(0, 255, 204, 0.4));
+    transition: var(--transition-smooth);
+}
+
+.logo-section img:hover {
+    transform: scale(1.05);
+    filter: drop-shadow(0 0 15px rgba(0, 255, 204, 0.6));
+}

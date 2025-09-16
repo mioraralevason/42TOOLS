@@ -1,0 +1,87 @@
+/* ===== Reset & Global Styles ===== */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    font-size: 16px;
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
+    background: url('/images/Background.png') no-repeat center center fixed;
+    background-size: cover;
+    color: var(--text-primary);
+    line-height: 1.6;
+    overflow-x: hidden;
+    min-height: 100vh;
+}
+
+/* Background overlay */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(45deg, rgba(10, 4, 43, 0.2) 0%, rgba(26, 15, 58, 0.1) 100%);
+    pointer-events: none;
+    z-index: -1;
+}
+
+/* ===== App Layout ===== */
+.App {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    position: relative;
+}
+
+/* ===== Main Content Area ===== */
+main {
+    flex: 1;
+    margin-left: var(--sidebar-width-collapsed);
+    margin-top: var(--header-height);
+    padding: var(--spacing-lg);
+    transition: var(--transition-smooth);
+    min-height: calc(100vh - var(--header-height));
+    width: calc(100vw - var(--sidebar-width-collapsed));
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+/* Adjust main when sidebar is expanded */
+.sidebar-expanded main {
+    margin-left: var(--sidebar-width-expanded);
+    width: calc(100vw - var(--sidebar-width-expanded));
+}
+
+/* ===== Custom Scrollbars ===== */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(0, 255, 204, 0.1);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--accent-cyan);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-blue);
+}
+
+/* Firefox Scrollbars */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent-cyan) rgba(0, 255, 204, 0.1);
+}

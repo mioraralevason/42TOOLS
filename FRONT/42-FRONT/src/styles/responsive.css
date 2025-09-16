@@ -1,0 +1,586 @@
+/* ===== Responsive Breakpoints ===== */
+
+/* Large Desktop */
+@media (min-width: 1200px) {
+    :root {
+        --sidebar-width-expanded: 280px;
+        --spacing-xl: 40px;
+    }
+    
+    .dashboard-title {
+        font-size: 2.5rem;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .milestone-section {
+        grid-column: span 1;
+    }
+}
+
+/* Desktop */
+@media (max-width: 1199px) and (min-width: 992px) {
+    :root {
+        --sidebar-width-expanded: 240px;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Tablet */
+@media (max-width: 991px) and (min-width: 768px) {
+    :root {
+        --sidebar-width-expanded: 220px;
+        --header-height: 70px;
+        --spacing-xl: 24px;
+    }
+    
+    .profile-pic {
+        width: 45px;
+        height: 45px;
+    }
+    
+    .name-status h1 {
+        font-size: 1rem;
+    }
+    
+    .dashboard-title {
+        font-size: 1.8rem;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--spacing-md);
+    }
+    
+    .stat-card {
+        min-height: 100px;
+        padding: var(--spacing-md);
+    }
+    
+    .milestone-section {
+        grid-column: span 2;
+        padding: var(--spacing-lg);
+    }
+    
+    .contact-card {
+        padding: var(--spacing-lg);
+    }
+}
+
+/* Mobile Large */
+@media (max-width: 767px) and (min-width: 576px) {
+    :root {
+        --sidebar-width-collapsed: 0;
+        --sidebar-width-expanded: 200px;
+        --header-height: 60px;
+        --spacing-lg: 16px;
+        --spacing-xl: 20px;
+    }
+    
+    .sidebar {
+        transform: translateX(-100%);
+    }
+    
+    .sidebar.expanded {
+        transform: translateX(0);
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    }
+    
+    main {
+        margin-left: 0;
+        width: 100vw;
+        padding: var(--spacing-md);
+    }
+    
+    .profile-card {
+        left: 0;
+        width: 100%;
+        height: var(--header-height);
+        padding: 0 var(--spacing-md);
+    }
+    
+    .profile-pic {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .name-status h1 {
+        font-size: 0.9rem;
+    }
+    
+    .name-status .username {
+        font-size: 0.75rem;
+    }
+    
+    .name-status p {
+        font-size: 0.7rem;
+    }
+    
+    .logo-section img {
+        height: 30px;
+    }
+    
+    .dashboard-container {
+        padding: var(--spacing-lg);
+        height: calc(100vh - var(--header-height) - var(--spacing-md) * 2);
+    }
+    
+    .dashboard-title {
+        font-size: 1.5rem;
+        letter-spacing: 1px;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-md);
+    }
+    
+    .milestone-section {
+        grid-column: span 1;
+        min-height: 120px;
+    }
+    
+    .contact-card {
+        padding: var(--spacing-md);
+    }
+    
+    .admin-input,
+    .input {
+        max-width: 100%;
+        padding: var(--spacing-sm) var(--spacing-md);
+        font-size: 0.9rem;
+    }
+    
+    .sel {
+        max-width: 100%;
+    }
+    
+    .codepen-button {
+        min-width: 150px;
+    }
+    
+    .popup-error,
+    .popup-success,
+    .popup-warning {
+        bottom: var(--spacing-sm);
+        right: var(--spacing-sm);
+        left: var(--spacing-sm);
+        max-width: none;
+    }
+}
+
+/* Mobile */
+@media (max-width: 575px) {
+    :root {
+        --sidebar-width-collapsed: 0;
+        --sidebar-width-expanded: 180px;
+        --header-height: 55px;
+        --spacing-sm: 6px;
+        --spacing-md: 10px;
+        --spacing-lg: 12px;
+        --spacing-xl: 16px;
+    }
+    
+    html {
+        font-size: 14px;
+    }
+    
+    .sidebar {
+        transform: translateX(-100%);
+        z-index: 1100;
+    }
+    
+    .sidebar.expanded {
+        transform: translateX(0);
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    }
+    
+    main {
+        margin-left: 0;
+        width: 100vw;
+        padding: var(--spacing-sm);
+        margin-top: var(--header-height);
+    }
+    
+    .profile-card {
+        left: 0;
+        width: 100%;
+        height: var(--header-height);
+        padding: 0 var(--spacing-sm);
+        flex-wrap: wrap;
+    }
+    
+    .profile-info {
+        gap: var(--spacing-sm);
+    }
+    
+    .profile-pic {
+        width: 35px;
+        height: 35px;
+    }
+    
+    .name-status h1 {
+        font-size: 0.8rem;
+        line-height: 1.2;
+    }
+    
+    .name-status .username {
+        font-size: 0.65rem;
+    }
+    
+    .name-status p {
+        font-size: 0.6rem;
+        display: none; /* Hide email on very small screens */
+    }
+    
+    .logo-section img {
+        height: 25px;
+    }
+    
+    .dashboard-container {
+        padding: var(--spacing-md);
+        height: calc(100vh - var(--header-height) - var(--spacing-sm) * 2);
+        border-radius: var(--border-radius);
+    }
+    
+    .dashboard-title {
+        font-size: 1.2rem;
+        letter-spacing: 0.5px;
+        margin-bottom: var(--spacing-sm);
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-sm);
+    }
+    
+    .stat-card {
+        min-height: 80px;
+        padding: var(--spacing-sm);
+    }
+    
+    .stat-label {
+        font-size: 0.75rem;
+    }
+    
+    .stat-value {
+        font-size: 1.2rem;
+    }
+    
+    .stat-icon {
+        font-size: 1.2rem;
+    }
+    
+    .milestone-section {
+        grid-column: span 1;
+        min-height: 100px;
+        padding: var(--spacing-md);
+    }
+    
+    .milestone-title {
+        font-size: 0.9rem;
+    }
+    
+    .milestone-value {
+        font-size: 2rem;
+    }
+    
+    .contact-card {
+        padding: var(--spacing-sm);
+        margin: var(--spacing-sm);
+    }
+    
+    .contact-card form {
+        gap: var(--spacing-sm);
+    }
+    
+    .admin-input,
+    .input {
+        padding: var(--spacing-sm);
+        font-size: 0.85rem;
+    }
+    
+    .sel select {
+        padding: var(--spacing-sm);
+        font-size: 0.85rem;
+    }
+    
+    .codepen-button {
+        min-width: 120px;
+    }
+    
+    .codepen-button span {
+        padding: var(--spacing-sm) var(--spacing-md);
+        font-size: 0.85rem;
+    }
+    
+    .popup-error,
+    .popup-success,
+    .popup-warning {
+        bottom: var(--spacing-sm);
+        right: var(--spacing-sm);
+        left: var(--spacing-sm);
+        max-width: none;
+        padding: var(--spacing-sm);
+    }
+    
+    .spinner {
+        width: 25px;
+        height: 25px;
+        border-width: 2px;
+    }
+    
+    .face {
+        width: 200px;
+        height: 200px;
+        margin-top: 50px;
+    }
+    
+    .server-error-container h1 {
+        font-size: 1.8rem;
+        padding: 0 var(--spacing-sm);
+    }
+    
+    .btn {
+        width: 90%;
+        max-width: 300px;
+        padding: var(--spacing-sm) var(--spacing-md);
+        font-size: 1rem;
+    }
+    
+    .modal {
+        width: 95%;
+        padding: var(--spacing-lg);
+    }
+    
+    .modal-title {
+        font-size: 1.1rem;
+    }
+}
+
+/* Extra Small Mobile */
+@media (max-width: 350px) {
+    :root {
+        --spacing-xs: 2px;
+        --spacing-sm: 4px;
+        --spacing-md: 8px;
+        --spacing-lg: 10px;
+        --spacing-xl: 12px;
+        --header-height: 50px;
+    }
+    
+    html {
+        font-size: 12px;
+    }
+    
+    .profile-card {
+        height: var(--header-height);
+        padding: 0 var(--spacing-xs);
+    }
+    
+    .profile-pic {
+        width: 30px;
+        height: 30px;
+    }
+    
+    .name-status h1 {
+        font-size: 0.7rem;
+    }
+    
+    .name-status .username {
+        font-size: 0.6rem;
+    }
+    
+    .logo-section img {
+        height: 20px;
+    }
+    
+    .dashboard-title {
+        font-size: 1rem;
+    }
+    
+    .stat-card {
+        min-height: 70px;
+        padding: var(--spacing-xs);
+    }
+    
+    .stat-label {
+        font-size: 0.7rem;
+    }
+    
+    .stat-value {
+        font-size: 1rem;
+    }
+    
+    .milestone-value {
+        font-size: 1.5rem;
+    }
+    
+    .face {
+        width: 150px;
+        height: 150px;
+        margin-top: 30px;
+    }
+    
+    .server-error-container h1 {
+        font-size: 1.4rem;
+    }
+}
+
+/* ===== Landscape Mobile Optimization ===== */
+@media (max-width: 767px) and (orientation: landscape) and (max-height: 500px) {
+    :root {
+        --header-height: 45px;
+    }
+    
+    .dashboard-container {
+        height: calc(100vh - var(--header-height) - var(--spacing-sm));
+        padding: var(--spacing-sm);
+    }
+    
+    .dashboard-title {
+        font-size: 1.1rem;
+        margin-bottom: var(--spacing-xs);
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--spacing-xs);
+    }
+    
+    .stat-card,
+    .milestone-section {
+        min-height: 60px;
+        padding: var(--spacing-xs);
+    }
+    
+    .profile-info {
+        gap: var(--spacing-xs);
+    }
+    
+    .name-status p {
+        display: none;
+    }
+}
+
+/* ===== Touch Device Optimizations ===== */
+@media (hover: none) and (pointer: coarse) {
+    /* Touch-friendly sizing */
+    .sidebar ul li a {
+        padding: var(--spacing-md);
+        min-height: 44px;
+    }
+    
+    .codepen-button {
+        min-height: 44px;
+    }
+    
+    .admin-input,
+    .input,
+    .sel select {
+        min-height: 44px;
+        padding: var(--spacing-md);
+    }
+    
+    .sidebar-toggle {
+        min-width: 44px;
+        min-height: 44px;
+    }
+    
+    .popup-error .close,
+    .popup-success .close,
+    .modal-close {
+        min-width: 44px;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .stat-card {
+        cursor: default; /* Remove pointer cursor on touch devices */
+    }
+}
+
+/* ===== High DPI Screens ===== */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .profile-pic,
+    .logo-section img,
+    .sidebar-logo img {
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+    }
+}
+
+/* ===== Reduced Motion ===== */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+    
+    .stat-card::before,
+    .sidebar ul li a,
+    .profile-pic,
+    .spinner {
+        animation: none !important;
+    }
+    
+    .sidebar,
+    main,
+    .profile-card {
+        transition: none !important;
+    }
+}
+
+/* ===== Print Styles ===== */
+@media print {
+    .sidebar,
+    .profile-card,
+    .sidebar-toggle,
+    .popup-error,
+    .popup-success,
+    .popup-warning,
+    .modal-overlay {
+        display: none !important;
+    }
+    
+    main {
+        margin: 0 !important;
+        width: 100% !important;
+        padding: 1cm !important;
+    }
+    
+    .dashboard-container {
+        box-shadow: none !important;
+        border: 1px solid #000 !important;
+        background: white !important;
+        color: black !important;
+        height: auto !important;
+    }
+    
+    .stat-card {
+        border: 1px solid #000 !important;
+        background: white !important;
+        color: black !important;
+        box-shadow: none !important;
+        break-inside: avoid;
+    }
+    
+    .dashboard-title {
+        color: #000 !important;
+        text-shadow: none !important;
+    }
+    
+    .stat-value,
+    .milestone-value {
+        color: #000 !important;
+        text-shadow: none !important;
+    }
+}
