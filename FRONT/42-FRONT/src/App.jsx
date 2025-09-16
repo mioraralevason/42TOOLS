@@ -7,6 +7,7 @@ import FreezeBegin from "./components/FreezeBegin";
 import ServerError from "./components/ServerError";
 import './index.css';
 import API_BASE_URL from "./config";
+import CheckAdmin from "./components/CheckAdmin";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -54,7 +55,7 @@ function App() {
           <Routes>
             <Route path="/certificate" element={<CertificateForm user={user} kind={userKind} />} />
             <Route path="/freeze-begin" element={<FreezeBegin />} />
-            <Route path="/check" element={<div>Admin Check Page (Placeholder)</div>} />
+            <Route path="/check" element={<CheckAdmin />} />
             <Route path="/checkUser" element={<div>User Check Page (Placeholder)</div>} />
             <Route path="/events" element={<div>Events Page (Placeholder)</div>} />
             <Route path="/" element={<CertificateForm user={user} kind={userKind} />} />
