@@ -11,6 +11,7 @@ import com.ecole._2.models.TokenResponse;
 import com.ecole._2.models.User;
 import com.ecole._2.services.OAuth42Service;
 import com.ecole._2.services.User42Service;
+import com.ecole._2.utils.CheckingUtils;
 
 import jakarta.servlet.http.HttpSession;
 
@@ -60,27 +61,11 @@ public class AuthController {
             logger.info("Authenticated user: {} (ID: {})", userResponse.getLogin(), userResponse.getId());
         }
 
-        // String kind = determineUserKind(userResponse);
+        // String kind = CheckingUtils.determineUserKind(userResponse);
         String kind = "admin";
         session.setAttribute("kind", kind);
 
         // Redirection vers React avec un flag login_success
         return "redirect:" + FRONT_URL + "/?login_success=true";
-    }
-
-    private String determineUserKind(User user) {
-        if (user.getKind() != null) return user.getKind();
-        if (isAdminUser(user)) return "admin";
-        return "student";
-    }
-
-    private boolean isAdminUser(User user) {
-        String[] adminLogins = {"admin", "root", "supervisor"};
-        if (user.getLogin() != null) {
-            for (String adminLogin : adminLogins) {
-                if (user.getLogin().toLowerCase().contains(adminLogin)) return true;
-            }
-        }
-        return false;
     }
 }

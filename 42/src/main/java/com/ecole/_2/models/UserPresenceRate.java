@@ -1,6 +1,6 @@
 package com.ecole._2.models;
 
-public class TauxPresenceUtilisateur {
+public class UserPresenceRate {
     private String userId;
     private String displayname;
     private Integer joursPresent;

@@ -19,6 +19,7 @@ import com.ecole._2.models.User;
 import com.ecole._2.services.ApiService;
 import com.ecole._2.services.CertificateService;
 import com.ecole._2.services.UserCursusService;
+import com.ecole._2.utils.CheckingUtils;
 
 import jakarta.servlet.http.HttpSession;
 
@@ -147,38 +148,12 @@ public class CertificateController {
             return "redirect:/login";
         }
 
-        // String kind = determineUserKind(userResponse);
+        // String kind = CheckingUtils.determineUserKind(userResponse);
         String kind = "admin";
         session.setAttribute("kind", kind);
         logger.info("User {} (kind: {}) redirected to certificate page", userResponse.getLogin(), kind);
 
         // Redirect to React frontend route
         return "redirect:" + FRONT_URL + "/certificate";
-    }
-
-    private String determineUserKind(User user) {
-        if (user.getKind() != null) {
-            return user.getKind();
-        }
-
-        if (isAdminUser(user)) {
-            return "admin";
-        }
-        
-        return "student";
-    }
-
-    private boolean isAdminUser(User user) {
-        String[] adminLogins = {"admin", "root", "supervisor"};
-        
-        if (user.getLogin() != null) {
-            for (String adminLogin : adminLogins) {
-                if (user.getLogin().toLowerCase().contains(adminLogin)) {
-                    return true;
-                }
-            }
-        }
-        
-        return false;
     }
 }

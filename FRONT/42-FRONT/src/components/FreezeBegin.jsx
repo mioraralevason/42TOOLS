@@ -1,30 +1,6 @@
 import React, { useEffect, useState } from "react";
 import API_BASE_URL from "../config.js";
-
-const ErrorPopup = ({ error }) => {
-  const [visible, setVisible] = useState(!!error);
-
-  useEffect(() => {
-    if (error) {
-      setVisible(true);
-      const timer = setTimeout(() => setVisible(false), 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [error]);
-
-  if (!visible || !error) return null;
-
-  return (
-    <div className="popup-error">
-      <div className="popup-content">
-        <span className="close" onClick={() => setVisible(false)}>
-          &times;
-        </span>
-        <p>{error}</p>
-      </div>
-    </div>
-  );
-};
+import ErrorPopup from "./ErrorPopup.jsx";
 
 const FreezeBegin = () => {
   const [userCursus, setUserCursus] = useState(null);

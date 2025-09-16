@@ -1,61 +1,71 @@
-import React, { useState } from "react";
-
-const mockUserLocationStats = [
-  {
-    userName: "alice",
-    stats: [
-      { date: "2025-09-01", durationStr: "5h 20m" },
-      { date: "2025-09-05", durationStr: "6h 10m" },
-    ],
-  },
-  {
-    userName: "bob",
-    stats: [
-      { date: "2025-09-03", durationStr: "4h 45m" },
-      { date: "2025-09-08", durationStr: "7h 00m" },
-    ],
-  },
-  {
-    userName: "charlie",
-    stats: [],
-  },
-];
+import React, { useState, useEffect } from "react";
+import API_BASE_URL from "../config.js";
+import ErrorPopup from "./ErrorPopup.jsx";
 
 const CheckAdmin = () => {
   const [startDate, setStartDate] = useState("2025-09-01");
   const [endDate, setEndDate] = useState("2025-09-15");
-  const [searchPerformed, setSearchPerformed] = useState(false);
-  const [filteredStats, setFilteredStats] = useState([]);
-  const [dayCount, setDayCount] = useState(0);
+  const [userStats, setUserStats] = useState([]);
+  const [globalRate, setGlobalRate] = useState(0);
+  const [totalDays, setTotalDays] = useState(0);
+  const [totalHours, setTotalHours] = useState(0);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const fetchStats = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      // 1️⃣ Call global presence rate
+      const resGlobal = await fetch(
+        `${API_BASE_URL}/stats/global?startDate=${startDate}&endDate=${endDate}`,
+        { credentials: "include" }
+      );
+      if (!resGlobal.ok) throw new Error(`HTTP ${resGlobal.status}`);
+      const global = await resGlobal.json();
+      setGlobalRate(global || 0);
+
+      // 2️⃣ Call all users stats
+      const resUsers = await fetch(
+        `${API_BASE_URL}/stats/users?startDate=${startDate}&endDate=${endDate}`,
+        { credentials: "include" }
+      );
+      if (!resUsers.ok) throw new Error(`HTTP ${resUsers.status}`);
+      const users = await resUsers.json();
+      setUserStats(users);
+
+      // Calculate total days and total hours
+      let days = 0;
+      let hours = 0;
+      users.forEach((u) => {
+        days += u.joursPresent || 0;
+        // hours = approx total: 1 day = 8h * tauxPresence%
+        hours += ((u.joursTotaux || 0) * (u.tauxPresence || 0) * 8) / 100;
+      });
+      setTotalDays(days);
+      setTotalHours(hours.toFixed(2));
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Unknown error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStats();
+  }, [startDate, endDate]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
-    // Conversion en objets Date
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-
-    // Filtrage des stats par date
-    const filtered = mockUserLocationStats.map((user) => {
-      const statsInRange = user.stats.filter((s) => {
-        const d = new Date(s.date);
-        return d >= start && d <= end;
-      });
-      return { ...user, stats: statsInRange };
-    });
-
-    setFilteredStats(filtered);
-
-    // Compter le total de présences
-    let totalDays = 0;
-    filtered.forEach((u) => (totalDays += u.stats.length));
-    setDayCount(totalDays);
-
-    setSearchPerformed(true);
+    fetchStats();
   };
 
   return (
     <div className="checking-admin">
+      <ErrorPopup error={error} />
+
       <form onSubmit={handleSubmit} className="checking-form">
         <div className="date-group">
           <div>
@@ -79,56 +89,39 @@ const CheckAdmin = () => {
             />
           </div>
         </div>
-
-        <button type="submit">Check Attendance</button>
       </form>
 
-      {searchPerformed && (
+      {loading && <p>Loading data...</p>}
+
+      {!loading && (
         <div className="results-section">
-          <h3>Verification Results</h3>
+          <h3>Global Attendance</h3>
+          <p>Global Presence Rate: {globalRate}%</p>
 
-          <div className="stats-display">
-            <div className="stat-card">
-              <div className="stat-number">{dayCount}</div>
-              <div className="stat-label">Present Students</div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-info">
-                {startDate} → {endDate}
-              </div>
-              <div className="stat-label">Date Range</div>
-            </div>
-          </div>
-
-          {filteredStats.some((u) => u.stats.length > 0) ? (
+          <h3>Per User Attendance</h3>
+          {userStats.length > 0 ? (
             <table className="results-table">
               <thead>
                 <tr>
-                  <th>Student Name</th>
-                  <th>Date</th>
-                  <th>Duration</th>
+                  <th>User</th>
+                  <th>Days Present</th>
+                  <th>Total Days</th>
+                  <th>Presence Rate (%)</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredStats.map((stat, i) => (
+                {userStats.map((u, i) => (
                   <tr key={i}>
-                    <td>{stat.userName}</td>
-                    <td>
-                      {stat.stats.length > 0
-                        ? stat.stats.map((s, j) => <div key={j}>{s.date}</div>)
-                        : "-"}
-                    </td>
-                    <td>
-                      {stat.stats.length > 0
-                        ? stat.stats.map((s, j) => <div key={j}>{s.durationStr}</div>)
-                        : "-"}
-                    </td>
+                    <td>{u.displayname}</td>
+                    <td>{u.joursPresent}</td>
+                    <td>{u.joursTotaux}</td>
+                    <td>{u.tauxPresence}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           ) : (
-            <p>No attendance found for the selected period.</p>
+            <p>No attendance records found for this period.</p>
           )}
         </div>
       )}

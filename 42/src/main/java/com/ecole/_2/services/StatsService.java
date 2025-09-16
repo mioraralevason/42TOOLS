@@ -1,6 +1,7 @@
 package com.ecole._2.services;
 
-import com.ecole._2.models.TauxPresenceUtilisateur;
+import com.ecole._2.models.UserPresenceRate;
+import com.ecole._2.models.UserPresenceRate;
 import com.ecole._2.repositories.StatsRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -20,14 +21,27 @@ public class StatsService {
         this.statsRepository = statsRepository;
     }
 
-    public List<TauxPresenceUtilisateur> getTauxParUtilisateur(String startDate, String endDate) {
+    /**
+     * Retourne le taux de présence par utilisateur avec option de filtrage par userId.
+     *
+     * @param startDate date de début (yyyy-MM-dd)
+     * @param endDate   date de fin (yyyy-MM-dd)
+     * @param userId    facultatif, filtre sur un utilisateur précis si non null/empty
+     * @return liste des taux de présence
+     */
+    public List<UserPresenceRate> getUserPresenceRates(String startDate, String endDate, String userId) {
         validateDates(startDate, endDate);
-        return statsRepository.getTauxPresenceParUtilisateur(startDate, endDate);
+
+        if (StringUtils.hasText(userId)) {
+            return statsRepository.getUserPresenceRateByUserId(startDate, endDate, userId);
+        } else {
+            return statsRepository.getUserPresenceRate(startDate, endDate);
+        }
     }
 
     public Double getTauxGlobal(String startDate, String endDate) {
         validateDates(startDate, endDate);
-        Double result = statsRepository.getTauxPresenceGlobal(startDate, endDate);
+        Double result = statsRepository.getGlobalPresenceRate(startDate, endDate);
         if (result == null) {
             throw new IllegalStateException("Global presence rate could not be retrieved for the given date range.");
         }
