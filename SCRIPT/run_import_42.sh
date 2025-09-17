@@ -4,7 +4,6 @@
 PYTHON_SCRIPT="/home/mralevas/Documents/GitHub/42TOOLS/SCRIPT/import_42.py"
 VENV_PATH="/home/mralevas/Documents/GitHub/42TOOLS/SCRIPT/venv"
 LOG_FILE="/home/mralevas/logfile.log"
-PIP="/home/mralevas/Documents/GitHub/42TOOLS/SCRIPT/venv/bin/pip"
 
 # Log function for consistent logging
 log() {
@@ -42,6 +41,9 @@ else
     python3 -m venv "$VENV_PATH"
     source "$VENV_PATH/bin/activate"
 fi
+
+# Define pip path after venv creation
+PIP="$VENV_PATH/bin/pip"
 
 # Install Python dependencies
 log "Installing Python dependencies..."

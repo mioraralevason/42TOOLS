@@ -4,6 +4,8 @@ RETURNS TABLE(
     user_id VARCHAR(250),
     login VARCHAR(250),
     displayname VARCHAR(250),
+    first_name VARCHAR(250),
+    last_name VARCHAR(250),
     jours_present INT,
     jours_totaux INT,
     taux_presence NUMERIC
@@ -17,6 +19,8 @@ BEGIN
         u.user_id,
         u.login,
         u.displayname,
+        u.first_name,
+        u.last_name,
         COUNT(DISTINCT s.date_)::INT AS jours_present,
         (SELECT COUNT(*)::INT FROM date_range) AS jours_totaux,
         ROUND(
@@ -28,7 +32,7 @@ BEGIN
     LEFT JOIN Stats s
         ON s.user_id = u.user_id
         AND s.date_ BETWEEN start_date AND end_date
-    GROUP BY u.user_id, u.login, u.displayname
+    GROUP BY u.user_id, u.login, u.displayname, u.first_name, u.last_name
     HAVING COUNT(DISTINCT s.date_) > 0
     ORDER BY taux_presence DESC;
 END;

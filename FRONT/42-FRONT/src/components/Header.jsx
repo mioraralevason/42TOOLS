@@ -11,7 +11,11 @@ const Header = ({ user }) => {
           className="profile-pic"
         />
         <div className="name-status">
-          <h1>{user ? `${user.first_name} ${user.last_name}` : "Nom Inconnu"}</h1>
+          <h1>
+            {user
+              ? `${user.first_name} ${user.last_name?.toUpperCase()}`
+              : "Nom Inconnu"}
+          </h1>
           <span className="username">{user?.login}</span>
           <p>
             <i className="fa fa-envelope contact-icon" aria-hidden="true"></i>

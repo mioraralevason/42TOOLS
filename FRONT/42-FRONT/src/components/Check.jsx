@@ -196,7 +196,7 @@ const Check = () => {
                 <tbody>
                   {paginatedStats.map((u, i) => (
                     <tr key={i}>
-                      <td>{u.displayname}</td>
+                      <td>{u.firstName} {u.lastName?.toUpperCase()}</td>
                       <td>{u.login}</td>
                       <td>{u.joursPresent}</td>
                       <td>{u.joursTotaux}</td>

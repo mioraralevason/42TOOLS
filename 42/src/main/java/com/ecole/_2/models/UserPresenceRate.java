@@ -4,6 +4,8 @@ public class UserPresenceRate {
     private String userId;
     private String login;
     private String displayname;
+    private String firstName;
+    private String lastName;
     private Integer joursPresent;
     private Integer joursTotaux;
     private Double tauxPresence;
@@ -32,6 +34,20 @@ public class UserPresenceRate {
         this.displayname = displayname;
     }
 
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+    
     public Integer getJoursPresent() {
         return joursPresent;
     }
