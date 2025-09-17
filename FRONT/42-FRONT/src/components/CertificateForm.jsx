@@ -1,12 +1,38 @@
 import React, { useState } from 'react';
 import API_BASE_URL from "../config";
+import '../index.css';
 
-const CertificateForm = ({ user, kind }) => {
+const CertificateForm = ({ user, kind, users }) => {
     const [login, setLogin] = useState(kind === 'admin' ? '' : user.login);
     const [signerPar, setSignerPar] = useState('aucune');
     const [lang, setLang] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [suggestions, setSuggestions] = useState([]);
+    const [showSuggestions, setShowSuggestions] = useState(false);
+
+    const handleLoginChange = (e) => {
+        const value = e.target.value;
+        setLogin(value);
+
+        if (kind === 'admin' && value.length > 0) {
+            const filteredSuggestions = users
+                .filter(u => u.login?.toLowerCase().includes(value.toLowerCase()))
+                .map(u => u.login)
+                .slice(0, 5); // Limit to 5 suggestions
+            setSuggestions(filteredSuggestions);
+            setShowSuggestions(true);
+        } else {
+            setSuggestions([]);
+            setShowSuggestions(false);
+        }
+    };
+
+    const handleSuggestionClick = (suggestion) => {
+        setLogin(suggestion);
+        setSuggestions([]);
+        setShowSuggestions(false);
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -54,15 +80,34 @@ const CertificateForm = ({ user, kind }) => {
             )}
             <form method="get" onSubmit={handleSubmit}>
                 {kind === 'admin' ? (
-                    <input
-                        type="text"
-                        className="admin-input"
-                        name="login"
-                        value={login}
-                        onChange={(e) => setLogin(e.target.value)}
-                        placeholder="Entrez le login"
-                        required
-                    />
+                    <div className="filter-box">
+                        <label htmlFor="login">Login</label>
+                        <input
+                            type="text"
+                            className="admin-input"
+                            id="login"
+                            name="login"
+                            value={login}
+                            onChange={handleLoginChange}
+                            onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                            placeholder="Entrez le login"
+                            required
+                            autoComplete="off"
+                        />
+                        {showSuggestions && suggestions.length > 0 && (
+                            <ul className="suggestions-list">
+                                {suggestions.map((suggestion, index) => (
+                                    <li
+                                        key={index}
+                                        onClick={() => handleSuggestionClick(suggestion)}
+                                        onMouseDown={(e) => e.preventDefault()} // Prevent blur on click
+                                    >
+                                        {suggestion}
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                    </div>
                 ) : (
                     <input type="hidden" name="login" value={user.login} />
                 )}

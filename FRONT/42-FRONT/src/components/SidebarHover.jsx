@@ -29,43 +29,26 @@ const SidebarHover = ({ userKind, sidebarVisible, setSidebarVisible }) => {
 
         <ul>
           <li>
-            <a href="/certificate">
+            <a href="/app/certificate">
               <FontAwesomeIcon icon={faHome} />
               <span>Certificat Scolarite</span>
             </a>
           </li>
           <li>
-            <a href="/freeze-begin">
+            <a href="/app/freeze-begin">
               <FontAwesomeIcon icon={faSnowflake} />
               <span>Freeze</span>
             </a>
           </li>
           <li className="has-submenu">
-            <a href="#">
+            <a href="/app/check">
               <FontAwesomeIcon icon={faCheckSquare} />
               <span>Checking</span>
-              <FontAwesomeIcon icon={faCaretDown} />
             </a>
-            <ul className="submenu">
-              {userKind === "admin" && (
-                <li>
-                  <a href="/check">
-                    <FontAwesomeIcon icon={faShieldAlt} />
-                    <span>Admin</span>
-                  </a>
-                </li>
-              )}
-              <li>
-                <a href="/checkUser">
-                  <FontAwesomeIcon icon={faUser} />
-                  <span>User</span>
-                </a>
-              </li>
-            </ul>
           </li>
           {userKind === "admin" && (
             <li>
-              <a href="/events">
+              <a href="/app/events">
                 <FontAwesomeIcon icon={faCalendar} />
                 <span>Events</span>
               </a>

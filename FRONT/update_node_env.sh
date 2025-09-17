@@ -64,6 +64,12 @@ if ! npm list react-router-dom >/dev/null 2>&1; then
   npm install react-router-dom
 fi
 
+# Installer Chart.js et react-chartjs-2 si manquant
+if ! npm list chart.js >/dev/null 2>&1 || ! npm list react-chartjs-2 >/dev/null 2>&1; then
+  echo "📥 Installation Chart.js et react-chartjs-2..."
+  npm install chart.js react-chartjs-2
+fi
+
 # Ajouter node_modules/.bin au PATH si absent
 if ! grep -q 'node_modules/.bin' ~/.bashrc; then
   echo 'export PATH=$PATH:./node_modules/.bin' >> ~/.bashrc

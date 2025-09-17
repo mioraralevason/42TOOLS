@@ -26,7 +26,7 @@ public class StatsRepository {
 
     // --- Methode pour tous les utilisateurs ---
     public List<UserPresenceRate> getUserPresenceRate(String startDate, String endDate) {
-        String sql = "SELECT user_id AS userId, displayname AS displayname, jours_present AS joursPresent, " +
+        String sql = "SELECT user_id AS userId, login AS login, displayname AS displayname, jours_present AS joursPresent, " +
                      "jours_totaux AS joursTotaux, taux_presence AS tauxPresence " +
                      "FROM taux_presence_par_utilisateur(?, ?)";
         return executeQueryForUsers(sql, startDate, endDate, null);
@@ -38,7 +38,7 @@ public class StatsRepository {
             throw new IllegalArgumentException("userId must not be empty");
         }
 
-        String sql = "SELECT user_id AS userId, displayname AS displayname, jours_present AS joursPresent, " +
+        String sql = "SELECT user_id AS userId, login AS login, displayname AS displayname, jours_present AS joursPresent, " +
                      "jours_totaux AS joursTotaux, taux_presence AS tauxPresence " +
                      "FROM taux_presence_par_utilisateur(?, ?) " +
                      "WHERE user_id = ?";
@@ -110,6 +110,7 @@ public class StatsRepository {
     private UserPresenceRate mapRow(ResultSet rs) throws SQLException {
         UserPresenceRate taux = new UserPresenceRate();
         taux.setUserId(rs.getString("userId"));
+        taux.setLogin(rs.getString("login"));
         taux.setDisplayname(rs.getString("displayname"));
         taux.setJoursPresent(rs.getInt("joursPresent"));
         taux.setJoursTotaux(rs.getInt("joursTotaux"));

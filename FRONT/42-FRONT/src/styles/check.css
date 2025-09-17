@@ -137,7 +137,7 @@
 .results-table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: var(--spacing-lg);
+  margin-top: 50px;
   font-size: 0.95rem;
 }
 
@@ -169,4 +169,97 @@
   color: var(--accent-red);
   font-weight: 600;
   margin-top: var(--spacing-lg);
+}
+/* ===== Filter Login ===== */
+.filter-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: var(--spacing-lg);
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 300px;
+  position: relative;
+  margin: 0 auto 20px;
+}
+
+.filter-box label {
+  font-weight: 600;
+  color: var(--accent-cyan);
+  margin-bottom: 6px;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.filter-box input[type="text"] {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid rgba(0, 255, 242, 0.3);
+  border-radius: var(--border-radius);
+  background: var(--primary-bg);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  transition: var(--transition-smooth);
+  text-align: center;
+}
+
+.filter-box input[type="text"]:focus {
+  outline: none;
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
+}
+
+/* Optionnel : placeholder stylé */
+.filter-box input[type="text"]::placeholder {
+  color: rgba(0, 255, 204, 0.5);
+  font-style: italic;
+}
+/* ===== Suggestions autocomplete ===== */
+.suggestions-list {
+  list-style: none;
+  padding: 0;
+  margin: 0; /* plus de marge */
+  border: 1px solid rgba(0, 255, 204, 0.3);
+  border-radius: 0; /* plus de bord arrondi */
+  width: 100%; /* prend toute la largeur du champ */
+  background: var(--primary-bg);
+  box-shadow: 0 5px 15px rgba(0, 255, 204, 0.2);
+  z-index: 100;
+  position: absolute;
+  top: 100%; /* juste sous le champ input */
+  left: 0;
+}
+
+.suggestions-list li {
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.suggestions-list li:hover {
+  background: rgba(0, 255, 204, 0.1);
+}
+
+/* ===== Pagination ===== */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-top: var(--spacing-lg);
+}
+
+.pagination button {
+  background: var(--gradient-primary);
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.pagination button:disabled {
+  opacity: 0.5;
+  cursor: default;
 }

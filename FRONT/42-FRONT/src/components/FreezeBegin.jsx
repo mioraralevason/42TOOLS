@@ -2,42 +2,52 @@ import React, { useEffect, useState } from "react";
 import API_BASE_URL from "../config.js";
 import ErrorPopup from "./ErrorPopup.jsx";
 
-const FreezeBegin = () => {
+const FreezeBegin = ({ user, kind, users }) => {
   const [userCursus, setUserCursus] = useState(null);
   const [locationStats, setLocationStats] = useState(null);
   const [freeze, setFreeze] = useState(null);
-  const [listLogin, setListLogin] = useState([]);
   const [login, setLogin] = useState("");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [nbDays, setNbDays] = useState(0);
   const [nbOpenDays, setNbOpenDays] = useState(0);
   const [totalHours, setTotalHours] = useState(0);
 
   const fetchFreezeData = async (loginParam) => {
     setLoading(true);
+    setError(null); // Reset error before fetching
     try {
       let url = `${API_BASE_URL}/api/freeze`;
       if (loginParam) url += `?login=${encodeURIComponent(loginParam)}`;
       const response = await fetch(url, { credentials: "include" });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to fetch freeze data");
+      }
       const data = await response.json();
 
-      if (data.error) throw new Error(data.error);
+      if (!data.userCursus && !data.locationStats) {
+        throw new Error("Aucune donnée disponible pour cet utilisateur");
+      }
 
       setUserCursus(data.userCursus || null);
       setLocationStats(data.locationStats || null);
       setFreeze(data.freeze || 0);
-      setListLogin(data.listLogin || []);
       setLogin(data.login || "");
-      setError(null);
       setNbDays(data.nbDays || 0);
       setNbOpenDays(data.nbOpenDays || 0);
       setTotalHours(data.totalHours || 0);
-      setIsAdmin(data.isAdmin);
     } catch (err) {
       console.error(err);
       setError(err.message || "Erreur inconnue");
+      setUserCursus(null);
+      setLocationStats(null);
+      setFreeze(null);
+      setNbDays(0);
+      setNbOpenDays(0);
+      setTotalHours(0);
     } finally {
       setLoading(false);
     }
@@ -56,30 +66,64 @@ const FreezeBegin = () => {
     fetchFreezeData(login);
   };
 
+  const handleLoginChange = (e) => {
+    const value = e.target.value;
+    setLogin(value);
+
+    if (kind === "admin" && value.length > 0) {
+      const filteredSuggestions = users
+        .filter((u) => u.login?.toLowerCase().includes(value.toLowerCase()))
+        .map((u) => u.login)
+        .slice(0, 5); // Limit to 5 suggestions
+      setSuggestions(filteredSuggestions);
+      setShowSuggestions(true);
+    } else {
+      setSuggestions([]);
+      setShowSuggestions(false);
+    }
+  };
+
+  const handleSuggestionClick = (suggestion) => {
+    setLogin(suggestion);
+    setSuggestions([]);
+    setShowSuggestions(false);
+    fetchFreezeData(suggestion); // Fetch data for the selected login
+  };
+
   return (
     <div className="main-content">
       <ErrorPopup error={error} />
 
       <div className="dashboard-container">
         <div className="dashboard-header">
-          {isAdmin && (
+          {kind === "admin" && (
             <form onSubmit={handleSearch} className="search-form">
-              <div className="group">
+              <div className="filter-box">
+                <label htmlFor="query">Rechercher un login</label>
                 <input
                   id="query"
                   className="input"
-                  type="search"
+                  type="text"
                   placeholder="Rechercher un login..."
                   value={login}
-                  onChange={(e) => setLogin(e.target.value)}
-                  list="login-suggestions"
+                  onChange={handleLoginChange}
+                  onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                   autoComplete="off"
+                  required
                 />
-                <datalist id="login-suggestions">
-                  {listLogin.map((lg, i) => (
-                    <option key={i} value={lg} />
-                  ))}
-                </datalist>
+                {showSuggestions && suggestions.length > 0 && (
+                  <ul className="suggestions-list">
+                    {suggestions.map((suggestion, index) => (
+                      <li
+                        key={index}
+                        onClick={() => handleSuggestionClick(suggestion)}
+                        onMouseDown={(e) => e.preventDefault()} // Prevent blur on click
+                      >
+                        {suggestion}
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
             </form>
           )}
@@ -92,10 +136,6 @@ const FreezeBegin = () => {
         </div>
 
         <div className="content-area">
-          {!loading && !userCursus && !locationStats && (
-            <p>Aucune donnée disponible pour cet utilisateur</p>
-          )}
-
           <div className="stats-grid">
             {userCursus && (
               <div className="milestone-section">
@@ -120,7 +160,7 @@ const FreezeBegin = () => {
               </div>
             )}
 
-            {isAdmin && locationStats && (
+            {kind === "admin" && locationStats && (
               <>
                 <div className="stat-card">
                   <div className="stat-header">

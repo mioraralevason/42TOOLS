@@ -2,6 +2,7 @@ package com.ecole._2.models;
 
 public class UserPresenceRate {
     private String userId;
+    private String login;
     private String displayname;
     private Integer joursPresent;
     private Integer joursTotaux;
@@ -13,6 +14,14 @@ public class UserPresenceRate {
 
     public void setUserId(String userId) {
         this.userId = userId;
+    }
+
+    public String getLogin() {
+        return login;
+    }
+
+    public void setLogin(String login) {
+        this.login = login;
     }
 
     public String getDisplayname() {

@@ -96,7 +96,7 @@ public class UserLocationStatsController {
                     throw new RuntimeException("User not found: " + login);
                 }
             } else {
-                return "203988"; // admin par défaut
+                return "203988";
             }
         }
         return null;

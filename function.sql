@@ -1,7 +1,8 @@
--- Fonction pour calculer le taux de présence par utilisateur
+-- Fonction pour calculer le taux de présence par utilisateur (sans ceux qui ont 0 jour présent)
 CREATE OR REPLACE FUNCTION taux_presence_par_utilisateur(start_date DATE, end_date DATE)
 RETURNS TABLE(
     user_id VARCHAR(250),
+    login VARCHAR(250),
     displayname VARCHAR(250),
     jours_present INT,
     jours_totaux INT,
@@ -14,15 +15,21 @@ BEGIN
     )
     SELECT 
         u.user_id,
+        u.login,
         u.displayname,
-        COUNT(DISTINCT s.date_) AS jours_present,
-        (SELECT COUNT(*) FROM date_range) AS jours_totaux,
-        ROUND(COUNT(DISTINCT s.date_)::numeric / (SELECT COUNT(*) FROM date_range) * 100, 2) AS taux_presence
+        COUNT(DISTINCT s.date_)::INT AS jours_present,
+        (SELECT COUNT(*)::INT FROM date_range) AS jours_totaux,
+        ROUND(
+            COUNT(DISTINCT s.date_)::NUMERIC 
+            / NULLIF((SELECT COUNT(*)::NUMERIC FROM date_range),0) * 100,
+            2
+        ) AS taux_presence
     FROM User_ u
     LEFT JOIN Stats s
         ON s.user_id = u.user_id
         AND s.date_ BETWEEN start_date AND end_date
-    GROUP BY u.user_id, u.displayname
+    GROUP BY u.user_id, u.login, u.displayname
+    HAVING COUNT(DISTINCT s.date_) > 0
     ORDER BY taux_presence DESC;
 END;
 $$ LANGUAGE plpgsql;

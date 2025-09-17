@@ -68,4 +68,4 @@ public class AuthController {
         // Redirection vers React avec un flag login_success
         return "redirect:" + FRONT_URL + "/?login_success=true";
     }
-}
+} 
