@@ -38,9 +38,15 @@ public class CertificateService {
     
     @Value("${certificate.responsable:Inconnu}")
     private String responsable;
+
+    @Value("${certificate.directeur:Inconnu}")
+    private String directeur;
     
-    @Value("${certificate.poste:Inconnu}")
-    private String poste;
+    @Value("${certificate.posteAssistant:Inconnu}")
+    private String posteAssistant;
+
+    @Value("${certificate.posteDirecteur:Inconnu}")
+    private String posteDirecteur;
     
     @Value("${certificate.etablissement:42}")
     private String etablissement;
@@ -67,7 +73,6 @@ public class CertificateService {
                 throw new IllegalArgumentException("Login must only contain letters, numbers or underscores");
             }
 
-            // Normalisation côté service : n'accepte que ces valeurs (canonique FR)
             String signerNormalized = "Aucune";
             if (signerPar != null) {
                 if ("Directeur".equalsIgnoreCase(signerPar) || "Director".equalsIgnoreCase(signerPar)) {
@@ -79,7 +84,6 @@ public class CertificateService {
                 }
             }
 
-            // Validation langue : on n'accepte que 'fr' ou 'en'
             if (lang == null || (!"fr".equalsIgnoreCase(lang) && !"en".equalsIgnoreCase(lang))) {
                 throw new IllegalArgumentException("lang must be 'fr' or 'en'");
             }
@@ -163,11 +167,15 @@ public class CertificateService {
             String currentDate = new SimpleDateFormat("dd/MM/yyyy").format(new Date());
             String currentYear = String.valueOf(LocalDate.now().getYear());
 
+            // Determine signer's name and position based on signerPar
+            String signerName = "Directeur".equals(signerPar) ? directeur : responsable;
+            String signerPoste = "Directeur".equals(signerPar) ? posteDirecteur : posteAssistant;
+
             Paragraph content = new Paragraph();
             content.setAlignment(Element.ALIGN_LEFT);
             content.setSpacingAfter(12f);
             content.add(new Chunk("Je soussigné, Monsieur ", bodyFont));
-            content.add(new Chunk(responsable + ", " + poste, boldFont));
+            content.add(new Chunk(signerName + ", " + signerPoste, boldFont));
             content.add(new Chunk(" de l'établissement " + etablissement + ", domicilié au " + etablissementAdresse + ", atteste que l'élève :", bodyFont));
             content.add(Chunk.NEWLINE);
             content.add(Chunk.NEWLINE);
@@ -246,11 +254,15 @@ public class CertificateService {
             String currentDate = new SimpleDateFormat("dd/MM/yyyy").format(new Date());
             String currentYear = String.valueOf(LocalDate.now().getYear());
 
+            // Determine signer's name and position based on signerPar
+            String signerName = "Directeur".equals(signerPar) ? directeur : responsable;
+            String signerPoste = "Directeur".equals(signerPar) ? posteDirecteur : posteAssistant;
+
             Paragraph content = new Paragraph();
             content.setAlignment(Element.ALIGN_LEFT);
             content.setSpacingAfter(12f);
             content.add(new Chunk("I, the undersigned, Mr. ", bodyFont));
-            content.add(new Chunk(responsable + ", " + poste, boldFont));
+            content.add(new Chunk(signerName + ", " + signerPoste, boldFont));
             content.add(new Chunk(" of the institution " + etablissement + ", located at " + etablissementAdresse + ", hereby certify that the student:", bodyFont));
             content.add(Chunk.NEWLINE);
             content.add(Chunk.NEWLINE);
@@ -302,7 +314,6 @@ public class CertificateService {
             float pageWidth = PageSize.A4.getWidth();
             float pageHeight = PageSize.A4.getHeight();
 
-            // Logo
             try {
                 if (logoPath != null && !logoPath.equals("classpath:static/pdf/logo.png") && !logoPath.equals("Inconnu.png")) {
                     Image logo = loadImageFromClasspath(logoPath);
@@ -319,7 +330,6 @@ public class CertificateService {
                 System.err.println("Logo error: " + e.getMessage());
             }
 
-            // Tampon
             try {
                 if (tamponPath != null && !tamponPath.equals("classpath:static/pdf/tampon.png") && !tamponPath.equals("Inconnu.png")) {
                     Image tampon = loadImageFromClasspath(tamponPath);
@@ -336,7 +346,6 @@ public class CertificateService {
                 System.err.println("Tampon error: " + e.getMessage());
             }
 
-            // Signature
             try {
                 String signaturePath = null;
                 if ("Directeur".equalsIgnoreCase(signerPar) || "Director".equalsIgnoreCase(signerPar)) {
@@ -368,14 +377,12 @@ public class CertificateService {
             
             String resourcePath = imagePath;
             
-            // Si le chemin commence par "classpath:", on enlève ce préfixe
             if (imagePath.startsWith("classpath:")) {
                 resourcePath = imagePath.substring(10);
             }
             
             System.out.println("Chemin de ressource final: " + resourcePath);
             
-            // Tentative avec ClassPathResource
             try {
                 ClassPathResource resource = new ClassPathResource(resourcePath);
                 System.out.println("Ressource existe: " + resource.exists());
@@ -392,12 +399,9 @@ public class CertificateService {
                 System.err.println("Erreur avec ClassPathResource: " + e.getMessage());
             }
             
-            // Tentative alternative avec getResourceAsStream
             try {
-                // Essayer avec le chemin tel quel
                 InputStream stream = getClass().getResourceAsStream("/" + resourcePath);
                 if (stream == null) {
-                    // Essayer sans le "/" au début
                     stream = getClass().getResourceAsStream(resourcePath);
                 }
                 
@@ -433,7 +437,7 @@ public class CertificateService {
         } catch (Exception e) {
             return "01/01/2000";
         }
-    }
+    } 
 
     private String getStringValue(Map<String, Object> map, String key, String defaultValue) {
         if (map == null) return defaultValue;
