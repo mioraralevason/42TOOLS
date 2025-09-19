@@ -41,13 +41,19 @@ public class CertificateService {
 
     @Value("${certificate.directeur:Inconnu}")
     private String directeur;
-    
-    @Value("${certificate.posteAssistant:Inconnu}")
-    private String posteAssistant;
 
-    @Value("${certificate.posteDirecteur:Inconnu}")
-    private String posteDirecteur;
-    
+    @Value("${certificate.fr.poste.assistant:Inconnu}")
+    private String posteAssistantFr;
+
+    @Value("${certificate.fr.poste.directeur:Inconnu}")
+    private String posteDirecteurFr;
+
+    @Value("${certificate.en.poste.assistant:Inconnu}")
+    private String posteAssistantEn;
+
+    @Value("${certificate.en.poste.directeur:Inconnu}")
+    private String posteDirecteurEn;
+
     @Value("${certificate.etablissement:42}")
     private String etablissement;
     
@@ -169,7 +175,7 @@ public class CertificateService {
 
             // Determine signer's name and position based on signerPar
             String signerName = "Directeur".equals(signerPar) ? directeur : responsable;
-            String signerPoste = "Directeur".equals(signerPar) ? posteDirecteur : posteAssistant;
+            String signerPoste = "Directeur".equals(signerPar) ? posteDirecteurFr : posteAssistantFr;
 
             Paragraph content = new Paragraph();
             content.setAlignment(Element.ALIGN_LEFT);
@@ -256,7 +262,7 @@ public class CertificateService {
 
             // Determine signer's name and position based on signerPar
             String signerName = "Directeur".equals(signerPar) ? directeur : responsable;
-            String signerPoste = "Directeur".equals(signerPar) ? posteDirecteur : posteAssistant;
+            String signerPoste = "Directeur".equals(signerPar) ? posteDirecteurEn : posteAssistantEn;
 
             Paragraph content = new Paragraph();
             content.setAlignment(Element.ALIGN_LEFT);
