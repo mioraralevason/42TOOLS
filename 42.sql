@@ -53,3 +53,23 @@ CREATE TABLE Stats (
     user_id VARCHAR(250),
     FOREIGN KEY(user_id) REFERENCES User_(user_id) ON DELETE CASCADE
 );
+
+CREATE TABLE Locations(
+   locations_id VARCHAR(50) ,
+   begin_at TIMESTAMPZ,
+   end_at TIMESTAMPZ,
+   primary_location BOOLEAN,
+   floor_ VARCHAR(250) ,
+   row_ VARCHAR(250) ,
+   post VARCHAR(250) ,
+   host VARCHAR(250) ,
+   campus_id VARCHAR(50) ,
+   created_at TIMESTAMPZ,
+   updated_at TIMESTAMPZ,
+   user_id VARCHAR(250)  NOT NULL,
+   PRIMARY KEY(locations_id),
+   FOREIGN KEY(user_id) REFERENCES User_(user_id)
+);
+
+ALTER TABLE Stats
+ADD CONSTRAINT stats_user_date_unique UNIQUE (user_id, date_);
