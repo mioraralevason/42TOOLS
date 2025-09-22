@@ -30,34 +30,46 @@ public class CertificateService {
     @Value("${certificate.tampon:classpath:static/pdf/tampon.png}")
     private String tamponPath;
     
-    @Value("${certificate.signature.directeur:classpath:static/pdf/signature_directeur.png}")
-    private String signatureDirecteurPath;
+    @Value("${certificate.signature.dg:classpath:static/pdf/signature_dg.png}")
+    private String signatureDgPath;
     
-    @Value("${certificate.signature.assistant:classpath:static/pdf/signature_assistant.png}")
-    private String signatureAssistantPath;
+    @Value("${certificate.signature.dp:classpath:static/pdf/signature_dp.png}")
+    private String signatureDpPath;
     
-    @Value("${certificate.responsable:Inconnu}")
-    private String responsable;
+    @Value("${certificate.signature.ap:classpath:static/pdf/signature_ap.png}")
+    private String signatureApPath;
+    
+    @Value("${certificate.dg.name:LACOSTE Antony}")
+    private String dgName;
 
-    @Value("${certificate.directeur:Inconnu}")
-    private String directeur;
+    @Value("${certificate.dp.name:SEBASTIAN Yan San}")
+    private String dpName;
 
-    @Value("${certificate.fr.poste.assistant:Inconnu}")
-    private String posteAssistantFr;
+    @Value("${certificate.ap.name:SURREL Antony}")
+    private String apName;
 
-    @Value("${certificate.fr.poste.directeur:Inconnu}")
-    private String posteDirecteurFr;
+    @Value("${certificate.dg.poste.fr:Directeur}")
+    private String posteDgFr;
 
-    @Value("${certificate.en.poste.assistant:Inconnu}")
-    private String posteAssistantEn;
+    @Value("${certificate.dp.poste.fr:Directeur Pédagogique et IT}")
+    private String posteDpFr;
 
-    @Value("${certificate.en.poste.directeur:Inconnu}")
-    private String posteDirecteurEn;
+    @Value("${certificate.ap.poste.fr:Assistant Pédagogique et IT}")
+    private String posteApFr;
 
-    @Value("${certificate.etablissement:42}")
+    @Value("${certificate.dg.poste.en:Director}")
+    private String posteDgEn;
+
+    @Value("${certificate.dp.poste.en:Educational and IT Director}")
+    private String posteDpEn;
+
+    @Value("${certificate.ap.poste.en:Educational and IT Assistant}")
+    private String posteApEn;
+
+    @Value("${certificate.etablissement:42 ANTANANARIVO}")
     private String etablissement;
     
-    @Value("${certificate.etablissement.adresse:Inconnu}")
+    @Value("${certificate.etablissement.adresse:Building Titan VI Zone Galaxy, Andraharo 101 Antananarivo}")
     private String etablissementAdresse;
     
     private static final Map<String, String> COUNTRY_TO_NATIONALITY = new HashMap<>();
@@ -70,7 +82,7 @@ public class CertificateService {
         COUNTRY_TO_NATIONALITY.put("Germany", "Allemande");
     }
 
-    public Resource generateCertificate(String login, String signerPar, String lang) {
+    public Resource generateCertificate(String login, String sousignerPar, boolean signer, String lang) {
         try {
             if (login == null || login.trim().isEmpty()) {
                 throw new IllegalArgumentException("Login cannot be empty");
@@ -79,14 +91,15 @@ public class CertificateService {
                 throw new IllegalArgumentException("Login must only contain letters, numbers or underscores");
             }
 
-            String signerNormalized = "Aucune";
-            if (signerPar != null) {
-                if ("Directeur".equalsIgnoreCase(signerPar) || "Director".equalsIgnoreCase(signerPar)) {
-                    signerNormalized = "Directeur";
-                } else if ("Assistant".equalsIgnoreCase(signerPar)) {
-                    signerNormalized = "Assistant";
+            String sousignerNormalized = "none";
+            if (sousignerPar != null) {
+                String s = sousignerPar.trim().toUpperCase();
+                if (s.equals("DG") || s.equals("DP") || s.equals("AP")) {
+                    sousignerNormalized = s;
+                } else if (s.equalsIgnoreCase("none")) {
+                    sousignerNormalized = "none";
                 } else {
-                    signerNormalized = "Aucune";
+                    sousignerNormalized = "none";
                 }
             }
 
@@ -99,7 +112,7 @@ public class CertificateService {
             Map<String, Object> userData = apiService.getUser(userId, token);
             Map<String, Object> candidatureData = apiService.getUserCandidature(userId, token);
 
-            ByteArrayOutputStream outputStream = createPdfDocument(userData, candidatureData, signerNormalized, lang.toLowerCase());
+            ByteArrayOutputStream outputStream = createPdfDocument(userData, candidatureData, sousignerNormalized, signer, lang.toLowerCase());
             return new ByteArrayResource(outputStream.toByteArray());
         } catch (IOException | DocumentException e) {
             throw new RuntimeException("Error generating certificate for " + login + ": " + e.getMessage(), e);
@@ -109,7 +122,7 @@ public class CertificateService {
     }
 
     private ByteArrayOutputStream createPdfDocument(Map<String, Object> userData, Map<String, Object> candidatureData,
-                                                  String signerPar, String lang) throws DocumentException, IOException {
+                                                  String sousignerPar, boolean signer, String lang) throws DocumentException, IOException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         Document document = new Document(PageSize.A4, 56.7f, 56.7f, 113.4f, 113.4f);
         
@@ -119,7 +132,7 @@ public class CertificateService {
                 @Override
                 public void onEndPage(PdfWriter writer, Document document) {
                     try {
-                        drawImages(writer.getDirectContent(), signerPar);
+                        drawImages(writer.getDirectContent(), sousignerPar, signer);
                     } catch (Exception e) {
                         System.err.println("Image drawing error: " + e.getMessage());
                     }
@@ -128,9 +141,9 @@ public class CertificateService {
             document.open();
 
             if ("en".equalsIgnoreCase(lang)) {
-                addContentEnglish(document, userData, candidatureData, signerPar);
+                addContentEnglish(document, userData, candidatureData, sousignerPar, signer);
             } else {
-                addContentFrench(document, userData, candidatureData, signerPar);
+                addContentFrench(document, userData, candidatureData, sousignerPar, signer);
             }
             
         } finally {
@@ -142,7 +155,7 @@ public class CertificateService {
     }
 
     private void addContentFrench(Document document, Map<String, Object> userData,
-                                 Map<String, Object> candidatureData, String signerPar) throws DocumentException {
+                                 Map<String, Object> candidatureData, String sousignerPar, boolean signer) throws DocumentException {
         try {
             Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16, BaseColor.BLACK);
             Font bodyFont = FontFactory.getFont(FontFactory.HELVETICA, 12, BaseColor.BLACK);
@@ -173,16 +186,32 @@ public class CertificateService {
             String currentDate = new SimpleDateFormat("dd/MM/yyyy").format(new Date());
             String currentYear = String.valueOf(LocalDate.now().getYear());
 
-            // Determine signer's name and position based on signerPar
-            String signerName = "Directeur".equals(signerPar) ? directeur : responsable;
-            String signerPoste = "Directeur".equals(signerPar) ? posteDirecteurFr : posteAssistantFr;
+            // Determine signer's name and position based on sousignerPar
+            String signerName = "none";
+            String signerPoste = "";
+            if (!"none".equals(sousignerPar)) {
+                if ("DG".equals(sousignerPar)) {
+                    signerName = dgName;
+                    signerPoste = posteDgFr;
+                } else if ("DP".equals(sousignerPar)) {
+                    signerName = dpName;
+                    signerPoste = posteDpFr;
+                } else if ("AP".equals(sousignerPar)) {
+                    signerName = apName;
+                    signerPoste = posteApFr;
+                }
+            }
 
             Paragraph content = new Paragraph();
             content.setAlignment(Element.ALIGN_LEFT);
             content.setSpacingAfter(12f);
-            content.add(new Chunk("Je soussigné, Monsieur ", bodyFont));
-            content.add(new Chunk(signerName + ", " + signerPoste, boldFont));
-            content.add(new Chunk(" de l'établissement " + etablissement + ", domicilié au " + etablissementAdresse + ", atteste que l'élève :", bodyFont));
+            if (!"none".equals(sousignerPar)) {
+                content.add(new Chunk("Je soussigné, Monsieur ", bodyFont));
+                content.add(new Chunk(signerName + ", " + signerPoste, boldFont));
+                content.add(new Chunk(" de l'établissement " + etablissement + ", domicilié au " + etablissementAdresse + ", atteste que l'élève :", bodyFont));
+            } else {
+                content.add(new Chunk("L'établissement " + etablissement + ", domicilié au " + etablissementAdresse + ", atteste que l'élève :", bodyFont));
+            }
             content.add(Chunk.NEWLINE);
             content.add(Chunk.NEWLINE);
             content.add(new Chunk(monsieurMadame, boldFont));
@@ -230,7 +259,7 @@ public class CertificateService {
     }
 
     private void addContentEnglish(Document document, Map<String, Object> userData,
-                                  Map<String, Object> candidatureData, String signerPar) throws DocumentException {
+                                  Map<String, Object> candidatureData, String sousignerPar, boolean signer) throws DocumentException {
         try {
             Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16, BaseColor.BLACK);
             Font bodyFont = FontFactory.getFont(FontFactory.HELVETICA, 12, BaseColor.BLACK);
@@ -260,16 +289,32 @@ public class CertificateService {
             String currentDate = new SimpleDateFormat("dd/MM/yyyy").format(new Date());
             String currentYear = String.valueOf(LocalDate.now().getYear());
 
-            // Determine signer's name and position based on signerPar
-            String signerName = "Directeur".equals(signerPar) ? directeur : responsable;
-            String signerPoste = "Directeur".equals(signerPar) ? posteDirecteurEn : posteAssistantEn;
+            // Determine signer's name and position based on sousignerPar
+            String signerName = "none";
+            String signerPoste = "";
+            if (!"none".equals(sousignerPar)) {
+                if ("DG".equals(sousignerPar)) {
+                    signerName = dgName;
+                    signerPoste = posteDgEn;
+                } else if ("DP".equals(sousignerPar)) {
+                    signerName = dpName;
+                    signerPoste = posteDpEn;
+                } else if ("AP".equals(sousignerPar)) {
+                    signerName = apName;
+                    signerPoste = posteApEn;
+                }
+            }
 
             Paragraph content = new Paragraph();
             content.setAlignment(Element.ALIGN_LEFT);
             content.setSpacingAfter(12f);
-            content.add(new Chunk("I, the undersigned, Mr. ", bodyFont));
-            content.add(new Chunk(signerName + ", " + signerPoste, boldFont));
-            content.add(new Chunk(" of the institution " + etablissement + ", located at " + etablissementAdresse + ", hereby certify that the student:", bodyFont));
+            if (!"none".equals(sousignerPar)) {
+                content.add(new Chunk("I, the undersigned, Mr. ", bodyFont));
+                content.add(new Chunk(signerName + ", " + signerPoste, boldFont));
+                content.add(new Chunk(" of the institution " + etablissement + ", located at " + etablissementAdresse + ", hereby certify that the student:", bodyFont));
+            } else {
+                content.add(new Chunk("The institution " + etablissement + ", located at " + etablissementAdresse + ", hereby certifies that the student:", bodyFont));
+            }
             content.add(Chunk.NEWLINE);
             content.add(Chunk.NEWLINE);
             content.add(new Chunk(mrMrs, boldFont));
@@ -315,7 +360,7 @@ public class CertificateService {
         }
     }
 
-    private void drawImages(PdfContentByte canvas, String signerPar) {
+    private void drawImages(PdfContentByte canvas, String sousignerPar, boolean signer) {
         try {
             float pageWidth = PageSize.A4.getWidth();
             float pageHeight = PageSize.A4.getHeight();
@@ -336,13 +381,14 @@ public class CertificateService {
                 System.err.println("Logo error: " + e.getMessage());
             }
 
+            float tamponX = 0;
             try {
                 if (tamponPath != null && !tamponPath.equals("classpath:static/pdf/tampon.png") && !tamponPath.equals("Inconnu.png")) {
                     Image tampon = loadImageFromClasspath(tamponPath);
                     if (tampon != null) {
                         tampon.scaleToFit(170.1f, 105.8f);
                         float tamponWidth = tampon.getScaledWidth();
-                        float tamponX = pageWidth - tamponWidth - 56.7f;
+                        tamponX = pageWidth - tamponWidth - 56.7f;
                         float tamponY = 170.1f;
                         tampon.setAbsolutePosition(tamponX, tamponY);
                         canvas.addImage(tampon);
@@ -354,18 +400,24 @@ public class CertificateService {
 
             try {
                 String signaturePath = null;
-                if ("Directeur".equalsIgnoreCase(signerPar) || "Director".equalsIgnoreCase(signerPar)) {
-                    signaturePath = signatureDirecteurPath;
-                } else if ("Assistant".equalsIgnoreCase(signerPar)) {
-                    signaturePath = signatureAssistantPath;
+                if (signer && !"none".equals(sousignerPar)) {
+                    if ("DG".equals(sousignerPar)) {
+                        signaturePath = signatureDgPath;
+                    } else if ("DP".equals(sousignerPar)) {
+                        signaturePath = signatureDpPath;
+                    } else if ("AP".equals(sousignerPar)) {
+                        signaturePath = signatureApPath;
+                    }
                 }
 
-                if (signaturePath != null && !signaturePath.equals("classpath:static/pdf/signature_directeur.png") 
-                    && !signaturePath.equals("classpath:static/pdf/signature_assistant.png") && !signaturePath.equals("Inconnu.png")) {
+                if (signaturePath != null && !signaturePath.equals("classpath:static/pdf/signature_dg.png") 
+                    && !signaturePath.equals("classpath:static/pdf/signature_dp.png") 
+                    && !signaturePath.equals("classpath:static/pdf/signature_ap.png") 
+                    && !signaturePath.equals("Inconnu.png")) {
                     Image signature = loadImageFromClasspath(signaturePath);
                     if (signature != null) {
                         signature.scaleToFit(170.1f, 85.05f);
-                        signature.setAbsolutePosition(56.7f, 170.1f);
+                        signature.setAbsolutePosition(tamponX, 170.1f);
                         canvas.addImage(signature);
                     }
                 }

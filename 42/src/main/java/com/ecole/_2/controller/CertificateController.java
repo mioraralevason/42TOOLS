@@ -48,7 +48,8 @@ public class CertificateController {
     @GetMapping("/certificate-generator")
     public ResponseEntity<?> getCertificate(
             @RequestParam("login") String login,
-            @RequestParam(value = "signer_par", required = false, defaultValue = "Aucune") String signerPar,
+            @RequestParam(value = "sousigner_par", required = false, defaultValue = "Aucune") String sousignerPar,
+            @RequestParam(value = "signer", required = false, defaultValue = "false") boolean signer,
             @RequestParam(value = "lang", required = false) String lang,
             HttpSession session,
             Model model
@@ -59,55 +60,53 @@ public class CertificateController {
                 Map<String, String> error = new HashMap<>();
                 error.put("error", "Session expired. Please log in again.");
                 return ResponseEntity.status(401)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(error);
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(error);
             }
-            
+
             // Si l'utilisateur n'est pas admin, on force le login de session (sécurité)
             if (!"admin".equals(session.getAttribute("kind"))) {
                 login = user.getLogin();
             }
-            
+
             if (login == null || login.trim().isEmpty()) {
                 Map<String, String> error = new HashMap<>();
                 error.put("error", "Login is required to generate the certificate.");
                 return ResponseEntity.status(400)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(error);
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(error);
             }
-            
-            
-            System.out.println("langue choisi: "+ lang);
+
+            System.out.println("langue choisi: " + lang);
             // Validation/langue : on exige explicitement "fr" ou "en"
             if (lang == null || (!"fr".equalsIgnoreCase(lang) && !"en".equalsIgnoreCase(lang))) {
                 Map<String, String> error = new HashMap<>();
                 error.put("error", "Invalid or missing 'lang' parameter. Use 'fr' or 'en'.");
                 return ResponseEntity.status(400)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(error);
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(error);
             }
             String langNormalized = lang.toLowerCase();
-            
-            // Normalisation signer_par : accepte valeurs FR ou EN envoyées par le formulaire
-            String signerNormalized = "Aucune"; // valeur canonique par défaut
-            if (signerPar != null) {
-                String s = signerPar.trim();
-                if (s.equalsIgnoreCase("directeur") || s.equalsIgnoreCase("director")) {
-                    signerNormalized = "Directeur";
-                } else if (s.equalsIgnoreCase("assistant") || s.equalsIgnoreCase("assistant")) {
-                    signerNormalized = "Assistant";
+
+            // Normalisation sousigner_par : accepte uniquement DG, DP, AP ou Aucune
+            String sousignerNormalized = "Aucune"; // valeur canonique par défaut
+            if (sousignerPar != null) {
+                String s = sousignerPar.trim().toUpperCase();
+                if (s.equals("DG") || s.equals("DP") || s.equals("AP")) {
+                    sousignerNormalized = s;
                 } else if (s.equalsIgnoreCase("aucune") || s.equalsIgnoreCase("none")) {
-                    signerNormalized = "Aucune";
+                    sousignerNormalized = "Aucune";
                 } else {
-                    // si valeur inconnue, on ne plante pas : on remet Aucune
-                    signerNormalized = "Aucune";
+                    // si valeur inconnue, on remet Aucune
+                    sousignerNormalized = "Aucune";
                 }
             }
-            
-            logger.info("Génération certificat: login={}, signer_par={}, lang={}", login, signerNormalized, langNormalized);
-            
-            Resource pdf = certificateService.generateCertificate(login, signerNormalized, langNormalized);
-            
+
+            logger.info("Génération certificat: login={}, sousigner_par={}, signer={}, lang={}",
+                    login, sousignerNormalized, signer, langNormalized);
+
+            Resource pdf = certificateService.generateCertificate(login, sousignerNormalized, signer, langNormalized);
+
             String filename = "school_certificate_" + login + "_" + langNormalized + ".pdf";
             return ResponseEntity.ok()
                     .contentType(MediaType.APPLICATION_PDF)
@@ -148,7 +147,6 @@ public class CertificateController {
             return "redirect:/login";
         }
 
-        // String kind = CheckingUtils.determineUserKind(userResponse);
         String kind = "admin";
         session.setAttribute("kind", kind);
         logger.info("User {} (kind: {}) redirected to certificate page", userResponse.getLogin(), kind);

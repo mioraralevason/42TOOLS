@@ -4,7 +4,8 @@ import '../index.css';
 
 const CertificateForm = ({ user, kind, users }) => {
     const [login, setLogin] = useState(kind === 'admin' ? '' : user.login);
-    const [signerPar, setSignerPar] = useState('aucune');
+    const [sousignerPar, setSousignerPar] = useState('none');
+    const [signer, setSigner] = useState(false);
     const [lang, setLang] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -41,7 +42,7 @@ const CertificateForm = ({ user, kind, users }) => {
 
         try {
             const response = await fetch(
-                `${API_BASE_URL}/certificate-generator?login=${encodeURIComponent(login)}&signer_par=${encodeURIComponent(signerPar)}&lang=${encodeURIComponent(lang)}`,
+                `${API_BASE_URL}/certificate-generator?login=${encodeURIComponent(login)}&sousigner_par=${encodeURIComponent(sousignerPar)}&signer=${signer}&lang=${encodeURIComponent(lang)}`,
                 {
                     method: 'GET',
                     credentials: 'include',
@@ -50,18 +51,18 @@ const CertificateForm = ({ user, kind, users }) => {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.error || 'Erreur lors de la génération du certificat');
+                throw new Error(errorData.error || 'Error generating certificate');
             }
 
             const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `certificat_scolaire_${login}_${lang}.pdf`;
+            a.download = `school_certificate_${login}_${lang}.pdf`;
             a.click();
             window.URL.revokeObjectURL(url);
         } catch (error) {
-            console.error('Erreur:', error.message);
+            console.error('Error:', error.message);
             setError(error.message);
         } finally {
             setLoading(false);
@@ -90,7 +91,7 @@ const CertificateForm = ({ user, kind, users }) => {
                             value={login}
                             onChange={handleLoginChange}
                             onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                            placeholder="Entrez le login"
+                            placeholder="Enter login"
                             required
                             autoComplete="off"
                         />
@@ -113,20 +114,23 @@ const CertificateForm = ({ user, kind, users }) => {
                 )}
 
                 <div className="sel sel--black-panther">
+                    <label htmlFor="sousigner_par">Signed by</label>
                     <select
-                        name="signer_par"
-                        id="signer_par"
-                        value={signerPar}
-                        onChange={(e) => setSignerPar(e.target.value)}
+                        name="sousigner_par"
+                        id="sousigner_par"
+                        value={sousignerPar}
+                        onChange={(e) => setSousignerPar(e.target.value)}
                         required
                     >
-                        <option value="aucune">Aucune</option>
-                        <option value="directeur">Directeur</option>
-                        <option value="assistant">Assistant</option>
+                        <option value="none">None</option>
+                        <option value="DG">General Director</option>
+                        <option value="DP">Educational Director</option>
+                        <option value="AP">Educational Assistant</option>
                     </select>
                 </div>
 
                 <div className="sel sel--black-panther">
+                    <label htmlFor="lang">Language</label>
                     <select
                         name="lang"
                         id="lang"
@@ -135,21 +139,32 @@ const CertificateForm = ({ user, kind, users }) => {
                         required
                     >
                         <option value="" disabled>
-                            -- Choisir la langue --
+                            -- Select Language --
                         </option>
-                        <option value="fr">Français</option>
-                        <option value="en">Anglais</option>
+                        <option value="fr">French</option>
+                        <option value="en">English</option>
                     </select>
                 </div>
 
+                <div className="checkbox-container">
+                    <label htmlFor="signer">Signed</label>
+                    <input
+                        type="checkbox"
+                        id="signer"
+                        name="signer"
+                        checked={signer}
+                        onChange={(e) => setSigner(e.target.checked)}
+                    />
+                </div>
+
                 <button type="submit" className="codepen-button" disabled={loading}>
-                    <span>{loading ? 'Génération...' : 'Générer le Certificat'}</span>
+                    <span>{loading ? 'Generating...' : 'Generate Certificate'}</span>
                 </button>
 
                 {loading && (
                     <div id="loader" style={{ marginTop: '20px', textAlign: 'center' }}>
                         <div className="spinner"></div>
-                        <div style={{ color: '#00ffcc', marginTop: '5px' }}>Génération en cours...</div>
+                        <div style={{ color: '#00ffcc', marginTop: '5px' }}>Generating...</div>
                     </div>
                 )}
             </form>
