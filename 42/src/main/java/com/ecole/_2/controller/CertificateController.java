@@ -1,19 +1,17 @@
 package com.ecole._2.controller;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.ecole._2.models.User;
 import com.ecole._2.services.ApiService;
@@ -39,104 +37,53 @@ public class CertificateController {
 
     private static final String FRONT_URL = "http://localhost:5173";
 
-    /**
-     * Endpoint pour générer le certificat.
-     * NOTE: 'lang' est optional pour éviter l'exception Spring si quelqu'un appelle l'URL
-     *       directement. Nous faisons ensuite une validation explicite et renvoyons une
-     *       erreur 400 si la langue est absente ou invalide.
-     */
     @GetMapping("/certificate-generator")
     public ResponseEntity<?> getCertificate(
             @RequestParam("login") String login,
-            @RequestParam(value = "signer_par", required = false, defaultValue = "Aucune") String signerPar,
+            @RequestParam(value = "sousigner_par", required = false, defaultValue = "Aucune") String sousignerPar,
+            @RequestParam(value = "signer", required = false, defaultValue = "false") boolean signer,
             @RequestParam(value = "lang", required = false) String lang,
-            HttpSession session,
-            Model model
+            HttpSession session
     ) {
-        try {
-            User user = (User) session.getAttribute("userResponse");
-            if (user == null) {
-                Map<String, String> error = new HashMap<>();
-                error.put("error", "Session expired. Please log in again.");
-                return ResponseEntity.status(401)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(error);
-            }
-            
-            // Si l'utilisateur n'est pas admin, on force le login de session (sécurité)
-            if (!"admin".equals(session.getAttribute("kind"))) {
-                login = user.getLogin();
-            }
-            
-            if (login == null || login.trim().isEmpty()) {
-                Map<String, String> error = new HashMap<>();
-                error.put("error", "Login is required to generate the certificate.");
-                return ResponseEntity.status(400)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(error);
-            }
-            
-            
-            System.out.println("langue choisi: "+ lang);
-            // Validation/langue : on exige explicitement "fr" ou "en"
-            if (lang == null || (!"fr".equalsIgnoreCase(lang) && !"en".equalsIgnoreCase(lang))) {
-                Map<String, String> error = new HashMap<>();
-                error.put("error", "Invalid or missing 'lang' parameter. Use 'fr' or 'en'.");
-                return ResponseEntity.status(400)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(error);
-            }
-            String langNormalized = lang.toLowerCase();
-            
-            // Normalisation signer_par : accepte valeurs FR ou EN envoyées par le formulaire
-            String signerNormalized = "Aucune"; // valeur canonique par défaut
-            if (signerPar != null) {
-                String s = signerPar.trim();
-                if (s.equalsIgnoreCase("directeur") || s.equalsIgnoreCase("director")) {
-                    signerNormalized = "Directeur";
-                } else if (s.equalsIgnoreCase("assistant") || s.equalsIgnoreCase("assistant")) {
-                    signerNormalized = "Assistant";
-                } else if (s.equalsIgnoreCase("aucune") || s.equalsIgnoreCase("none")) {
-                    signerNormalized = "Aucune";
-                } else {
-                    // si valeur inconnue, on ne plante pas : on remet Aucune
-                    signerNormalized = "Aucune";
-                }
-            }
-            
-            logger.info("Génération certificat: login={}, signer_par={}, lang={}", login, signerNormalized, langNormalized);
-            
-            Resource pdf = certificateService.generateCertificate(login, signerNormalized, langNormalized);
-            
-            String filename = "school_certificate_" + login + "_" + langNormalized + ".pdf";
-            return ResponseEntity.ok()
-                    .contentType(MediaType.APPLICATION_PDF)
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
-                    .body(pdf);
-
-        } catch (IllegalArgumentException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", "Invalid parameter: " + e.getMessage());
-            return ResponseEntity.status(400)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(error);
-
-        } catch (RuntimeException e) {
-            logger.error("Runtime error during certificate generation", e);
-            Map<String, String> error = new HashMap<>();
-            error.put("error", "Error during generation: " + e.getMessage());
-            return ResponseEntity.status(500)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(error);
-
-        } catch (Exception e) {
-            logger.error("Internal error during certificate generation", e);
-            Map<String, String> error = new HashMap<>();
-            error.put("error", "Internal server error. Please try again later.");
-            return ResponseEntity.status(500)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(error);
+        User user = (User) session.getAttribute("userResponse");
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
         }
+
+        String kind = (String) session.getAttribute("kind");
+        if (!"admin".equals(kind)) {
+            login = user.getLogin();
+        }
+
+        if (login == null || login.trim().isEmpty()) {
+            throw new IllegalArgumentException("Login is required to generate the certificate.");
+        }
+
+        if (lang == null || (!"fr".equalsIgnoreCase(lang) && !"en".equalsIgnoreCase(lang))) {
+            throw new IllegalArgumentException("Invalid or missing 'lang' parameter. Use 'fr' or 'en'.");
+        }
+        String langNormalized = lang.toLowerCase();
+
+        String sousignerNormalized = "Aucune";
+        if (sousignerPar != null) {
+            String s = sousignerPar.trim().toUpperCase();
+            if (s.equals("DG") || s.equals("DP") || s.equals("AP")) {
+                sousignerNormalized = s;
+            } else if (s.equalsIgnoreCase("aucune") || s.equalsIgnoreCase("none")) {
+                sousignerNormalized = "Aucune";
+            }
+        }
+
+        logger.info("Génération certificat: login={}, sousigner_par={}, signer={}, lang={}",
+                login, sousignerNormalized, signer, langNormalized);
+
+        Resource pdf = certificateService.generateCertificate(login, sousignerNormalized, signer, langNormalized);
+
+        String filename = "school_certificate_" + login + "_" + langNormalized + ".pdf";
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                .body(pdf);
     }
 
     @GetMapping("/certificate")
@@ -147,13 +94,11 @@ public class CertificateController {
             logger.warn("No user in session, redirecting to login");
             return "redirect:/login";
         }
-
         // String kind = CheckingUtils.determineUserKind(userResponse);
-        String kind = "admin";
+        String kind = "admin"; // Temporary override for testing
         session.setAttribute("kind", kind);
         logger.info("User {} (kind: {}) redirected to certificate page", userResponse.getLogin(), kind);
 
-        // Redirect to React frontend route
         return "redirect:" + FRONT_URL + "/certificate";
     }
 }

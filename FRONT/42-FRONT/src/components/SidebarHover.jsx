@@ -46,14 +46,6 @@ const SidebarHover = ({ userKind, sidebarVisible, setSidebarVisible }) => {
               <span>Checking</span>
             </a>
           </li>
-          {userKind === "admin" && (
-            <li>
-              <a href="/app/events">
-                <FontAwesomeIcon icon={faCalendar} />
-                <span>Events</span>
-              </a>
-            </li>
-          )}
         </ul>
       </aside>
     </>

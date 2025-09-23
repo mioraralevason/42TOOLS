@@ -14,7 +14,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -48,36 +50,33 @@ public class UserLocationStatsController {
             HttpSession session) {
 
         Map<String, Object> response = new HashMap<>();
-        String userId = determineUserId(login, (String) session.getAttribute("kind"), session);
-
-        try {
-            String tokenAdmin = apiService.getAccessToken();
-            CursusUser userCursus = userCursusService.getUserCursus(userId, tokenAdmin).filterByGrade("Cadet");
-            UserLocationStat locationStats = userLocationStatsService.getUserLocationStats(userId, tokenAdmin, null, null);
-            dateDebut = userCursus.getBegin_at();
-            // Call the method here
-            long nbDays = locationStats.getNbDays(dateDebut, null);
-            long nbOpenDays = locationStats.getNbOpenDays(dateDebut, null);
-            double totalHours = locationStats.getTotalHours(dateDebut, null);
-            Freeze freeze = new Freeze();
-            freeze.setA(nbDays);
-            freeze.setB(nbOpenDays);
-            freeze.setC(totalHours);
-            freeze.setD(userCursus.getMilestone());
-
-            response.put("nbDays", nbDays);
-            response.put("nbOpenDays", nbOpenDays);
-            response.put("totalHours", totalHours);
-            // response.put("isAdmin", isAdminUser((User)session.getAttribute("useResponse")) );
-            response.put("isAdmin", true);
-
-            response.put("freeze", freeze.calculFreeze());
-            response.put("userCursus", userCursus);
-            response.put("locationStats", locationStats);
-
-        } catch (Exception e) {
-            response.put("error", e.getMessage());
+        User user = (User) session.getAttribute("userResponse");
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
         }
+        String kind = (String) session.getAttribute("kind");
+        String userId = determineUserId(login, kind, session);
+
+        String tokenAdmin = apiService.getAccessToken();
+        CursusUser userCursus = userCursusService.getUserCursus(userId, tokenAdmin).filterByGrade("Cadet");
+        UserLocationStat locationStats = userLocationStatsService.getUserLocationStats(userId, tokenAdmin, null, null);
+        dateDebut = userCursus.getBegin_at();
+        long nbDays = locationStats.getNbDays(dateDebut, null);
+        long nbOpenDays = locationStats.getNbOpenDays(dateDebut, null);
+        double totalHours = locationStats.getTotalHours(dateDebut, null);
+        Freeze freeze = new Freeze();
+        freeze.setA(nbDays);
+        freeze.setB(nbOpenDays);
+        freeze.setC(totalHours);
+        freeze.setD(userCursus.getMilestone());
+
+        response.put("nbDays", nbDays);
+        response.put("nbOpenDays", nbOpenDays);
+        response.put("totalHours", totalHours);
+        response.put("isAdmin", isAdminUser(user));
+        response.put("freeze", freeze.calculFreeze());
+        response.put("userCursus", userCursus);
+        response.put("locationStats", locationStats);
 
         return response;
     }
@@ -93,7 +92,7 @@ public class UserLocationStatsController {
                 try {
                     return apiService.getIdUsers(login.trim(), apiService.getAccessToken());
                 } catch (Exception e) {
-                    throw new RuntimeException("User not found: " + login);
+                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found: " + login);
                 }
             } else {
                 return "203988";
@@ -102,11 +101,6 @@ public class UserLocationStatsController {
         return null;
     }
 
-    private String getStringValue(Map<String, Object> map, String key, String defaultValue) {
-        if (map == null) return defaultValue;
-        Object value = map.get(key);
-        return value != null ? value.toString() : defaultValue;
-    }
     private boolean isAdminUser(User user) {
         String[] adminLogins = {"admin", "root", "supervisor"};
         if (user.getLogin() != null) {

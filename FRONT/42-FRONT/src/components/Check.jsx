@@ -6,16 +6,28 @@ import ErrorPopup from "./ErrorPopup.jsx";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
+// Custom error class for consistent error handling
+class ResponseStatusException extends Error {
+  constructor(status, message) {
+    super(message);
+    this.status = status;
+  }
+}
+
 const ITEMS_PER_PAGE = 10;
 
-const Check = () => {
-  const [startDate, setStartDate] = useState("2025-09-01");
-  const [endDate, setEndDate] = useState("2025-09-15");
+const Check = ({ user, kind }) => {
+  const [today, setToday] = useState(new Date());
+  const [startDate, setStartDate] = useState(today.setMonth(today.getMonth() - 1) > new Date().getMonth() - 1
+    ? new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString().split('T')[0]
+    : new Date(new Date().setMonth(new Date().getMonth() - 2)).toISOString().split('T')[0]);
+  const [endDate, setEndDate] = useState(today.toISOString().split('T')[0] > new Date().toISOString().split('T')[0]
+    ? new Date().toISOString().split('T')[0]
+    : new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split('T')[0]);
   const [userStats, setUserStats] = useState([]);
   const [globalRate, setGlobalRate] = useState(0);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-
   const [filterLogin, setFilterLogin] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -28,21 +40,48 @@ const Check = () => {
         `${API_BASE_URL}/stats/global?startDate=${startDate}&endDate=${endDate}`,
         { credentials: "include" }
       );
-      if (!resGlobal.ok) throw new Error(`HTTP ${resGlobal.status}`);
+      if (!resGlobal.ok) {
+        if (resGlobal.status === 401) {
+          setError("Authentication required. Redirecting to login...");
+          setTimeout(() => {
+            window.location.href = `${API_BASE_URL}/login`;
+          }, 2000);
+          return;
+        }
+        const errorData = await resGlobal.json().catch(() => ({}));
+        throw new ResponseStatusException(resGlobal.status, errorData.error || `HTTP error! status: ${resGlobal.status}`);
+      }
       const global = await resGlobal.json();
       setGlobalRate(global || 0);
 
-      const resUsers = await fetch(
-        `${API_BASE_URL}/stats/users?startDate=${startDate}&endDate=${endDate}`,
-        { credentials: "include" }
-      );
-      if (!resUsers.ok) throw new Error(`HTTP ${resUsers.status}`);
-      const users = await resUsers.json();
-      setUserStats(users);
-
+      if (kind === "admin") {
+        const resUsers = await fetch(
+          `${API_BASE_URL}/stats/users?startDate=${startDate}&endDate=${endDate}`,
+          { credentials: "include" }
+        );
+        if (!resUsers.ok) {
+          if (resUsers.status === 401) {
+            setError("Authentication required. Redirecting to login...");
+            setTimeout(() => {
+              window.location.href = `${API_BASE_URL}/login`;
+            }, 2000);
+            return;
+          }
+          if (resUsers.status === 403) {
+            setUserStats([]);
+            return;
+          }
+          const errorData = await resUsers.json().catch(() => ({}));
+          throw new ResponseStatusException(resUsers.status, errorData.error || `HTTP error! status: ${resUsers.status}`);
+        }
+        const users = await resUsers.json();
+        setUserStats(users);
+      } else {
+        setUserStats([]);
+      }
     } catch (err) {
-      console.error(err);
-      setError(err.message || "Unknown error");
+      console.error("Error fetching stats:", err.message);
+      setError(err.message || "Failed to fetch statistics. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -50,7 +89,7 @@ const Check = () => {
 
   useEffect(() => {
     fetchStats();
-  }, [startDate, endDate]);
+  }, [startDate, endDate, kind]);
 
   useEffect(() => {
     if (filterLogin) {
@@ -78,9 +117,8 @@ const Check = () => {
     currentPage * ITEMS_PER_PAGE
   );
 
-  // Doughnut data & options
   const doughnutData = {
-    labels: ["Présent", "Absent"],
+    labels: ["Present", "Absent"],
     datasets: [
       {
         data: [globalRate, 100 - globalRate],
@@ -93,18 +131,16 @@ const Check = () => {
 
   const doughnutOptions = {
     responsive: true,
-    cutout: "70%", // plus petit camembert
+    cutout: "70%",
     plugins: {
       legend: { display: false },
       tooltip: { enabled: false },
-      // Taux au centre
-      beforeDraw: (chart) => {},
     },
   };
 
   return (
     <div className="checking-admin">
-      <ErrorPopup error={error} />
+      <ErrorPopup error={error} setError={setError} />
 
       <form
         onSubmit={(e) => {
@@ -135,51 +171,61 @@ const Check = () => {
             />
           </div>
         </div>
+        <button type="submit" className="codepen-button" disabled={loading}>
+          Fetch Stats
+        </button>
       </form>
 
       {loading && <p>Loading data...</p>}
 
       {!loading && (
         <div className="results-section">
-          <h3>Global Attendance</h3>
-          <div style={{ position: "relative", width: "200px", margin: "0 auto" }}>
-            <Doughnut data={doughnutData} options={doughnutOptions} />
-            <div
-              style={{
-                position: "absolute",
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%, -50%)",
-                fontSize: "1.5rem",
-                fontWeight: "700",
-                color: "#00ffc0",
-              }}
-            >
-              {globalRate}%
-            </div>
-          </div>
+          {
+            kind === "admin" && (
+              <>
+                <h3>Global Attendance</h3>
+                <div style={{ position: "relative", width: "200px", margin: "0 auto" }}>
+                  <Doughnut data={doughnutData} options={doughnutOptions} />
+                  <div
+                    style={{
+                    position: "absolute",
+                    top: "50%",
+                    left: "50%",
+                    transform: "translate(-50%, -50%)",
+                    fontSize: "1.5rem",
+                    fontWeight: "700",
+                    color: "#00ffc0",
+                  }}
+                >
+                  {globalRate}%
+                </div>
+              </div>
+            </>
+            )
+          }
 
-          {/* Filter / autocomplete */}
-          <div className="filter-box">
-            <label htmlFor="filterLogin">Filter by Login</label>
-            <input
-              type="text"
-              id="filterLogin"
-              placeholder="Enter login..."
-              value={filterLogin}
-              onChange={(e) => setFilterLogin(e.target.value)}
-              autoComplete="off"
-            />
-            {suggestions.length > 0 && (
-              <ul className="suggestions-list">
-                {suggestions.map((s, i) => (
-                  <li key={i} onClick={() => setFilterLogin(s)}>
-                    {s}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+          {kind === "admin" && (
+            <div className="filter-box">
+              <label htmlFor="filterLogin">Filter by Login</label>
+              <input
+                type="text"
+                id="filterLogin"
+                placeholder="Enter login..."
+                value={filterLogin}
+                onChange={(e) => setFilterLogin(e.target.value)}
+                autoComplete="off"
+              />
+              {suggestions.length > 0 && (
+                <ul className="suggestions-list">
+                  {suggestions.map((s, i) => (
+                    <li key={i} onClick={() => setFilterLogin(s)}>
+                      {s}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
 
           {paginatedStats.length > 0 ? (
             <>
@@ -206,7 +252,6 @@ const Check = () => {
                 </tbody>
               </table>
 
-              {/* Pagination */}
               <div className="pagination">
                 <button
                   disabled={currentPage === 1}
