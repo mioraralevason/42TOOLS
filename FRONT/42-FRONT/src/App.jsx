@@ -11,28 +11,60 @@ import API_BASE_URL from "./config";
 import Check from "./components/Check";
 import { BrowserRouter } from "react-router-dom";
 
+// Custom error class for consistent error handling
+class ResponseStatusException extends Error {
+  constructor(status, message) {
+    super(message);
+    this.status = status;
+  }
+}
+
 function App() {
   const [user, setUser] = useState(null);
-  const [users, setUsers] = useState([]); // State to store all users
+  const [users, setUsers] = useState([]);
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const [loading, setLoading] = useState(true);
   const [serverDown, setServerDown] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(null);
+
+  const fetchWithRetry = async (url, options, retries = 3, delay = 1000) => {
+    for (let i = 0; i < retries; i++) {
+      try {
+        const res = await fetch(url, { ...options, credentials: "include" });
+        if (!res.ok) {
+          if (res.status === 429) {
+            await new Promise(resolve => setTimeout(resolve, delay * (i + 1)));
+            continue;
+          }
+          if (res.status === 401) {
+            setUser(null);
+            window.location.href = `${API_BASE_URL}/login`;
+            return null;
+          }
+          const errorData = await res.json().catch(() => ({}));
+          throw new ResponseStatusException(res.status, errorData.error || `HTTP error! status: ${res.status}`);
+        }
+        return res;
+      } catch (err) {
+        if (i === retries - 1) throw err;
+        await new Promise(resolve => setTimeout(resolve, delay * (i + 1)));
+      }
+    }
+  };
 
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/api/user`, {
-          credentials: "include",
+        const res = await fetchWithRetry(`${API_BASE_URL}/api/user`, {
+          method: "GET",
         });
-        if (!res.ok || res.status === 401 || res.status === 204) {
-          setUser(null);
-          window.location.href = `${API_BASE_URL}/login`; // Redirect to OAuth login
-        } else {
+        if (res) {
           const data = await res.json();
           setUser(data);
         }
       } catch (err) {
-        console.error("Server unreachable:", err);
+        console.error("Server error:", err.message);
+        setErrorMessage(err.message || "Failed to connect to the server");
         setServerDown(true);
       } finally {
         setLoading(false);
@@ -41,59 +73,28 @@ function App() {
 
     const fetchAllUsers = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/users`, {
-          credentials: "include",
+        const res = await fetchWithRetry(`${API_BASE_URL}/users`, {
+          method: "GET",
         });
-        if (!res.ok) {
-          if (res.status === 403) {
-            console.warn("Access denied: Only admins can fetch all users");
-            setUsers([]); // Set empty array if not authorized
-          } else {
-            throw new Error(`HTTP error! status: ${res.status}`);
-          }
-        } else {
+        if (res) {
           const data = await res.json();
           setUsers(data);
         }
       } catch (err) {
-        console.error("Error fetching all users:", err);
-        setUsers([]); // Set empty array on error
+        console.error("Error fetching all users:", err.message);
+        if (err.status !== 403) {
+          setErrorMessage(err.message || "Failed to fetch users");
+        }
+        setUsers([]);
       }
     };
 
     fetchUser();
+    fetchAllUsers();
   }, []);
 
-  // Fetch users only if user is an admin
-  useEffect(() => {
-    if (user && (user.kind?.toLowerCase() === 'admin' || ['admin', 'root', 'supervisor'].some(admin => user.login?.toLowerCase().includes(admin)))) {
-      const fetchAllUsers = async () => {
-        try {
-          const res = await fetch(`${API_BASE_URL}/users`, {
-            credentials: "include",
-          });
-          if (!res.ok) {
-            if (res.status === 403) {
-              console.warn("Access denied: Only admins can fetch all users");
-              setUsers([]);
-            } else {
-              throw new Error(`HTTP error! status: ${res.status}`);
-            }
-          } else {
-            const data = await res.json();
-            setUsers(data);
-          }
-        } catch (err) {
-          console.error("Error fetching all users:", err);
-          setUsers([]);
-        }
-      };
-      fetchAllUsers();
-    }
-  }, [user]);
-
   if (loading) return <div>Loading...</div>;
-  if (serverDown) return <ServerError />;
+  if (serverDown) return <ServerError message={errorMessage} />;
   if (!user) return <div>Redirecting to login...</div>;
 
   const userKind = user.kind || (user.login && ['admin', 'root', 'supervisor'].some(admin => user.login.toLowerCase().includes(admin)) ? 'admin' : 'student');
@@ -110,7 +111,7 @@ function App() {
         <Routes>
           <Route path="/certificate" element={<CertificateForm user={user} kind={userKind} users={userKind === 'admin' ? users : []} />} />
           <Route path="/freeze-begin" element={<FreezeBegin user={user} kind={userKind} users={userKind === 'admin' ? users : []} />} />
-          <Route path="/check" element={<Check />} />
+          <Route path="/check" element={<Check user={user} kind={userKind} />} />
           <Route path="/events" element={<div>Events Page (Placeholder)</div>} />
           <Route path="/" element={<CertificateForm user={user} kind={userKind} users={userKind === 'admin' ? users : []} />} />
         </Routes>

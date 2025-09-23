@@ -1,7 +1,6 @@
 package com.ecole._2.controller;
 
 import com.ecole._2.models.UserPresenceRate;
-import com.ecole._2.models.UserPresenceRate;
 import com.ecole._2.services.StatsService;
 
 import jakarta.servlet.http.HttpSession;
@@ -24,38 +23,37 @@ public class StatsController {
         this.statsService = statsService;
     }
 
-   @GetMapping("/users")
+    @GetMapping("/users")
     public List<UserPresenceRate> getUserPresenceRates(
             @RequestParam("startDate") String startDate,
             @RequestParam("endDate") String endDate,
             @RequestParam(value = "userId", required = false) String userId,
-            HttpSession session) {  // need session to get logged-in user info
-        try {
-            // Get the logged-in user info from session
-            var userResponse = (com.ecole._2.models.User) session.getAttribute("userResponse");
-            var kind = (String) session.getAttribute("kind");
-
-            if (!"admin".equalsIgnoreCase(kind)) {
-                // If not admin, ignore the request parameter and use session user ID
-                userId = userResponse != null ? userResponse.getId() : null;
-            }
-
-            return statsService.getUserPresenceRates(startDate, endDate, userId);
-        } catch (Exception e) {
-            logger.error("Error processing /stats/users for startDate: {}, endDate: {}, userId: {}", startDate, endDate, userId, e);
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve user presence rates", e);
+            HttpSession session) {
+        
+        var userResponse = (com.ecole._2.models.User) session.getAttribute("userResponse");
+        if (userResponse == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
         }
+        var kind = (String) session.getAttribute("kind");
+
+        if (!"admin".equalsIgnoreCase(kind)) {
+            userId = userResponse.getId();
+        }
+
+        return statsService.getUserPresenceRates(startDate, endDate, userId);
     }
 
     @GetMapping("/global")
     public Double getTauxGlobal(
             @RequestParam("startDate") String startDate,
-            @RequestParam("endDate") String endDate) {
-        try {
-            return statsService.getTauxGlobal(startDate, endDate);
-        } catch (Exception e) {
-            logger.error("Error processing /stats/global for startDate: {}, endDate: {}", startDate, endDate, e);
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to retrieve global presence rate", e);
+            @RequestParam("endDate") String endDate,
+            HttpSession session) {
+        
+        var userResponse = (com.ecole._2.models.User) session.getAttribute("userResponse");
+        if (userResponse == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
         }
+
+        return statsService.getTauxGlobal(startDate, endDate);
     }
 }

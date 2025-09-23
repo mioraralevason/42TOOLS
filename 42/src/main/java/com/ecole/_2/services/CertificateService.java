@@ -179,7 +179,7 @@ public class CertificateService {
                 getStringValue(candidatureData, "country", "Inconnu"), "Inconnue");
 
             String gender = getStringValue(candidatureData, "gender", "");
-            String monsieurMadame = "male".equals(gender) ? "Monsieur" : "female".equals(gender) ? "Madame" : "Monsieur";
+            String monsieurMadame = "male".equals(gender) ? "Monsieur" : "female".equals(gender) ? "Madame" : "Monsieur/Madame";
             String interesse = "male".equals(gender) ? "l'intéressé" : "female".equals(gender) ? "l'intéressée" : "l'intéressé";
             String inscrit = "male".equals(gender) ? "inscrit" : "female".equals(gender) ? "inscrite" : "inscrit";
 

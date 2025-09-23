@@ -10,7 +10,7 @@ USER_IDS_FILE="$OUTPUT_DIR/campus${CAMPUS_ID}_user_ids_yesterday.txt"
 PAGE_SIZE=100
 
 # Date d'hier à Madagascar (UTC+3)
-BEGIN_AT="$(TZ='Indian/Antananarivo' date -d 'yesterday' +%Y-%m-%d)T00:00:00Z"
+BEGIN_AT="$(TZ='Indian/Antananarivo' date -d '3 Days ago' +%Y-%m-%d)T00:00:00Z"
 END_AT="$(TZ='Indian/Antananarivo' date -d 'yesterday' +%Y-%m-%d)T23:59:59Z"
 
 CLIENT_ID="u-s4t2af-23f031abd5ab1c7afcd6b43148ddd70b2ae20692602fb8c142f94fabb55b5373"

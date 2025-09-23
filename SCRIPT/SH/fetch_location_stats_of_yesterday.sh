@@ -14,7 +14,7 @@ CHECKPOINT_FILE="$OUTPUT_DIR/location_stats_checkpoint_yesterday.json"
 mkdir -p "$OUTPUT_DIR"
 
 # Date d’hier et aujourd'hui, format YYYY-MM-DD
-BEGIN_AT="${1:-$(date -d 'yesterday' +%Y-%m-%d)}"
+BEGIN_AT="${1:-$(date -d '3 Days ago' +%Y-%m-%d)}"
 END_AT="${1:-$(date -d 'today' +%Y-%m-%d)}"
 
 # Credentials
