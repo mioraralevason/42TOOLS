@@ -9,7 +9,9 @@ import Login from "./components/Login";
 import './index.css';
 import API_BASE_URL from "./config";
 import Check from "./components/Check";
+import Calendar from "./components/Calendar"; 
 import { BrowserRouter } from "react-router-dom";
+
 
 // Custom error class for consistent error handling
 class ResponseStatusException extends Error {
@@ -114,6 +116,9 @@ function App() {
           <Route path="/check" element={<Check user={user} kind={userKind} />} />
           <Route path="/events" element={<div>Events Page (Placeholder)</div>} />
           <Route path="/" element={<CertificateForm user={user} kind={userKind} users={userKind === 'admin' ? users : []} />} />
+          <Route path="/calendar" element={<Calendar />} />
+
+
         </Routes>
       </main>
     </div>

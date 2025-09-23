@@ -1,0 +1,75 @@
+/* Container */
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.calendar-day {
+  position: relative;
+  background: var(--primary-bg);
+  border: 1px solid rgba(0, 255, 204, 0.2);
+  border-radius: var(--border-radius);
+  padding: 15px 10px;
+  text-align: center;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  transition: var(--transition-smooth);
+  min-height: 70px;
+}
+
+.calendar-day:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(0, 255, 204, 0.2);
+  border-color: rgba(0, 255, 204, 0.5);
+}
+
+.day-number {
+  font-weight: 700;
+  color: var(--accent-cyan);
+  display: block;
+  margin-bottom: 6px;
+  font-size: 1rem;
+}
+
+/* Presence / Freeze / Bonus */
+.calendar-day.presence {
+  background: rgba(0, 255, 150, 0.1);
+  border-color: rgba(0, 255, 150, 0.4);
+}
+
+.calendar-day.freeze {
+  background: rgba(255, 50, 50, 0.1);
+  border-color: rgba(255, 50, 50, 0.4);
+}
+
+.calendar-day.bonus {
+  background: rgba(50, 150, 255, 0.1);
+  border-color: rgba(50, 150, 255, 0.4);
+}
+
+/* Milestones */
+.milestone {
+  font-size: 1.2rem;
+  margin-top: 5px;
+  color: var(--accent-blue);
+  text-shadow: 0 0 8px rgba(0, 200, 255, 0.6);
+}
+
+/* Select style */
+#view {
+  padding: 8px 12px;
+  border: 1px solid rgba(0, 255, 204, 0.3);
+  border-radius: var(--border-radius);
+  background: var(--primary-bg);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  transition: var(--transition-smooth);
+}
+
+#view:focus {
+  outline: none;
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 8px rgba(0, 255, 204, 0.3);
+}

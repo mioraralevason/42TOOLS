@@ -15,7 +15,7 @@
 @import './styles/popup.css';
 @import './styles/server-error.css';
 @import './styles/check.css';
-
+@import './styles/Calendar.css';
 
 /* 4. Utilitaires et animations */
 @import './styles/utilities.css';

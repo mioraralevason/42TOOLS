@@ -46,6 +46,12 @@ const SidebarHover = ({ userKind, sidebarVisible, setSidebarVisible }) => {
               <span>Checking</span>
             </a>
           </li>
+            <li className="has-submenu">
+            <a href="/app/calendar">
+              <FontAwesomeIcon icon={faCalendar} />
+              <span>Calendar</span>
+            </a>
+          </li>
         </ul>
       </aside>
     </>
