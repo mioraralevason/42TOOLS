@@ -11,6 +11,7 @@ public class CursusUser {
     private int id;
     private String begin_at;
     private String end_at;
+    private String blackholed_at; // date limite du cursus
     private String grade;
     private double level;
     private int cursus_id;
@@ -27,6 +28,9 @@ public class CursusUser {
 
     public String getEnd_at() { return end_at; }
     public void setEnd_at(String end_at) { this.end_at = end_at; }
+
+    public String getBlackholed_at() { return blackholed_at; }
+    public void setBlackholed_at(String blackholed_at) { this.blackholed_at = blackholed_at; }
 
     public String getGrade() { return grade; }
     public void setGrade(String grade) { this.grade = grade; }
@@ -60,9 +64,23 @@ public class CursusUser {
         return zdt.format(formatter);
     }
 
+    // Retourne la date de blackhole formatée pour affichage
+    @JsonProperty("formattedBlackholedAt")
+    public String getFormattedBlackholedAt() {
+        if (blackholed_at == null || blackholed_at.isEmpty()) return "";
+        ZonedDateTime zdt = ZonedDateTime.parse(this.blackholed_at);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.FRENCH);
+        return zdt.format(formatter);
+    }
+
     // Ignorer la version non JSON pour éviter conflit
     @JsonIgnore
     public ZonedDateTime getBeginZonedDateTime() {
         return ZonedDateTime.parse(this.begin_at);
+    }
+
+    @JsonIgnore
+    public ZonedDateTime getBlackholedZonedDateTime() {
+        return ZonedDateTime.parse(this.blackholed_at);
     }
 }
