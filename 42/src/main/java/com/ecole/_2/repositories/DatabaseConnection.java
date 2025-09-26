@@ -1,19 +1,19 @@
 package com.ecole._2.repositories;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
-
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 @Component
 public class DatabaseConnection {
     private static final Logger logger = LoggerFactory.getLogger(DatabaseConnection.class);
     private static final String URL = "jdbc:postgresql://localhost:5432/e42";
     private static final String USER = "postgres";
-    private static final String PASSWORD = "Discovery@123456";
+    private static final String PASSWORD = "tiavina";
 
     public Connection getConnection() throws SQLException {
         try {

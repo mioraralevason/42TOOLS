@@ -1,5 +1,8 @@
 package com.ecole._2.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Cursus {
     private int id;
     private String created_at;

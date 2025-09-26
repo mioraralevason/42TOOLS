@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 import json
 import psycopg2
 from psycopg2.extras import execute_values
@@ -9,7 +12,7 @@ from datetime import date, timedelta
 # ===========================
 DB_NAME = "e42"
 DB_USER = "postgres"
-DB_PASSWORD = "Discovery@123456"
+DB_PASSWORD = "tiavina"
 DB_HOST = "localhost"
 DB_PORT = "5432"
 CAMPUS_ID = "65"

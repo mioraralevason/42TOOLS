@@ -3,6 +3,9 @@ package com.ecole._2.models;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class User {
     private String id;
     private String email;
@@ -65,12 +68,12 @@ public class User {
         this.usual_full_name = usual_full_name;
     }
 
-    public void setKind(String kind) {
-        this.kind = kind;
-    }
-
     public String getKind() {
         return kind;
+    }
+
+    public void setKind(String kind) {
+        this.kind = kind;
     }
 
     public Image getImage() {
@@ -81,13 +84,6 @@ public class User {
         this.image = image;
     }
 
-    public List<CursusUser> getCursus_users() {
-        return cursus_users;
-    }
-
-    public void setCursus_users(List<CursusUser> cursus_users) {
-        this.cursus_users = cursus_users;
-    }
     public String getPool_month() {
         return pool_month;
     }
@@ -104,12 +100,18 @@ public class User {
         this.pool_year = pool_year;
     }
 
-    public static List<User> filterUsersByPool(List<User> users, String poolMonth, String poolYear) {
-        return users.stream()
-                .filter(user -> poolMonth.equalsIgnoreCase(user.getPool_month()) 
-                             && poolYear.equalsIgnoreCase(user.getPool_year()))
-                .collect(Collectors.toList());
+    public List<CursusUser> getCursus_users() {
+        return cursus_users;
     }
 
-  
+    public void setCursus_users(List<CursusUser> cursus_users) {
+        this.cursus_users = cursus_users;
+    }
+
+    public static List<User> filterUsersByPool(List<User> users, String poolMonth, String poolYear) {
+        return users.stream()
+                .filter(user -> poolMonth.equalsIgnoreCase(user.getPool_month())
+                        && poolYear.equalsIgnoreCase(user.getPool_year()))
+                .collect(Collectors.toList());
+    }
 }

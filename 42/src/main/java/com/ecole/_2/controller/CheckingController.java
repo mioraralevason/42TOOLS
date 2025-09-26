@@ -1,20 +1,15 @@
 package com.ecole._2.controller;
 
-import com.ecole._2.models.LocationStat;
-import com.ecole._2.models.TokenResponse;
-import com.ecole._2.models.User;
-import com.ecole._2.models.UserLocationStat;
-import com.ecole._2.services.ApiService;
-import com.ecole._2.services.CampusUsersService;
-import com.ecole._2.services.UserLocationStatsFilterService;
-import com.ecole._2.services.UserLocationStatsService;
-import jakarta.servlet.http.HttpSession;
 import java.time.LocalDate;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +18,18 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.ecole._2.models.CursusUser;
+import com.ecole._2.models.LocationStat;
+import com.ecole._2.models.TokenResponse;
+import com.ecole._2.models.User;
+import com.ecole._2.models.UserLocationStat;
+import com.ecole._2.services.ApiService;
+import com.ecole._2.services.CampusUsersService;
+import com.ecole._2.services.UserLocationStatsService;
+
+import jakarta.servlet.http.HttpSession;
 
 @Controller
 public class CheckingController {
@@ -38,9 +45,6 @@ public class CheckingController {
     @Autowired
     private UserLocationStatsService userLocationStatsService;
 
-    @Autowired
-    private UserLocationStatsFilterService userLocationStatsFilterService;
-
     private static final String CAMPUS_ID = "65";
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
@@ -49,7 +53,10 @@ public class CheckingController {
         try {
             TokenResponse tokenResponse = (TokenResponse) session.getAttribute("tokenResponse");
             User userResponse = (User) session.getAttribute("userResponse");
-            if (tokenResponse == null || userResponse == null) return "redirect:/login";
+            if (tokenResponse == null || userResponse == null) {
+                logger.warn("No token or user in session, redirecting to login");
+                return "redirect:/login";
+            }
 
             model.addAttribute("userResponse", userResponse);
             model.addAttribute("kind", session.getAttribute("kind"));
@@ -59,7 +66,7 @@ public class CheckingController {
 
         } catch (Exception e) {
             logger.error("Error loading checking page", e);
-            model.addAttribute("error", "Erreur lors du chargement de la page");
+            model.addAttribute("error", "Erreur lors du chargement de la page: " + e.getMessage());
             return "error-page";
         }
         return "checking-admin";
@@ -77,9 +84,11 @@ public class CheckingController {
         try {
             TokenResponse tokenResponse = (TokenResponse) session.getAttribute("tokenResponse");
             User userResponse = (User) session.getAttribute("userResponse");
-            if (tokenResponse == null || userResponse == null) return "redirect:/login";
+            if (tokenResponse == null || userResponse == null) {
+                logger.warn("No token or user in session, redirecting to login");
+                return "redirect:/login";
+            }
 
-            // Validation des dates
             if (!isValidDateRange(startDate, endDate)) {
                 model.addAttribute("error", "Dates invalides. La date de début doit être antérieure ou égale à la date de fin.");
                 model.addAttribute("userResponse", userResponse);
@@ -100,21 +109,19 @@ public class CheckingController {
                 userList = User.filterUsersByPool(userList, pool, year);
             }
 
-            // Récupération sécurisée des stats utilisateurs avec leurs noms
             List<UserLocationStat> userLocationStats = new ArrayList<>();
             String token = apiService.getAccessToken();
             for (User u : userList) {
                 try {
-                    UserLocationStat stat = userLocationStatsService.getUserLocationStats(u.getId(), token,startDate,endDate);
-                    // Récupérer les données de l'utilisateur pour obtenir le login
+                    UserLocationStat stat = userLocationStatsService.getUserLocationStats(u.getId(), token, startDate, endDate);
                     Map<String, Object> userData = apiService.getUser(u.getId(), token);
-                    String userName = (String) userData.getOrDefault("login", u.getId()); 
-                    stat.setUserName(userName); 
+                    String userName = (String) userData.getOrDefault("login", u.getId());
+                    stat.setUserName(userName);
                     userLocationStats.add(stat);
                 } catch (Exception e) {
                     logger.warn("Could not fetch stats or user data for user {}: {}", u.getId(), e.getMessage());
                     UserLocationStat stat = new UserLocationStat(u.getId(), null);
-                    stat.setUserName(u.getId()); // Fallback sur userId si erreur
+                    stat.setUserName(u.getId());
                     userLocationStats.add(stat);
                 }
             }
@@ -137,23 +144,15 @@ public class CheckingController {
         return "checking-admin";
     }
 
-    private boolean isValidDateRange(String startDate, String endDate) {
-        try {
-            LocalDate start = LocalDate.parse(startDate, DATE_FORMATTER);
-            LocalDate end = LocalDate.parse(endDate, DATE_FORMATTER);
-            return !end.isBefore(start);
-        } catch (DateTimeParseException e) {
-            logger.warn("Invalid date format: startDate={}, endDate={}", startDate, endDate);
-            return false;
-        }
-    }
-
     @GetMapping("/checkUser")
     public String checkUserPage(Model model, HttpSession session) {
         try {
             TokenResponse tokenResponse = (TokenResponse) session.getAttribute("tokenResponse");
             User userResponse = (User) session.getAttribute("userResponse");
-            if (tokenResponse == null || userResponse == null) return "redirect:/login";
+            if (tokenResponse == null || userResponse == null) {
+                logger.warn("No token or user in session, redirecting to login");
+                return "redirect:/login";
+            }
 
             model.addAttribute("userResponse", userResponse);
             model.addAttribute("kind", session.getAttribute("kind"));
@@ -164,7 +163,7 @@ public class CheckingController {
 
         } catch (Exception e) {
             logger.error("Error loading checking page for user", e);
-            model.addAttribute("error", "Erreur lors du chargement de la page");
+            model.addAttribute("error", "Erreur lors du chargement de la page: " + e.getMessage());
             return "error-page";
         }
         return "checking-user";
@@ -181,7 +180,10 @@ public class CheckingController {
         try {
             TokenResponse tokenResponse = (TokenResponse) session.getAttribute("tokenResponse");
             User userResponse = (User) session.getAttribute("userResponse");
-            if (tokenResponse == null || userResponse == null) return "redirect:/login";
+            if (tokenResponse == null || userResponse == null) {
+                logger.warn("No token or user in session, redirecting to login");
+                return "redirect:/login";
+            }
 
             if (!isValidDateRange(startDate, endDate)) {
                 model.addAttribute("error", "Dates invalides. La date de début doit être antérieure ou égale à la date de fin.");
@@ -197,14 +199,14 @@ public class CheckingController {
             String token = apiService.getAccessToken();
             String userId = apiService.getIdUsers(login, token);
             try {
-                userStat = userLocationStatsService.getUserLocationStats(userId, token,startDate,endDate);
+                userStat = userLocationStatsService.getUserLocationStats(userId, token, startDate, endDate);
                 userStat.setUserName(login);
                 List<LocationStat> locationStats = userStat.filterStatsBetween(startDate, endDate);
                 userStat.setStats(locationStats);
             } catch (Exception e) {
                 logger.warn("Could not fetch stats or user data for user {}: {}", userId, e.getMessage());
                 userStat = new UserLocationStat(userId, null);
-                userStat.setUserName(userId); // Fallback sur userId si erreur
+                userStat.setUserName(userId);
             }
 
             model.addAttribute("userResponse", userResponse);
@@ -222,5 +224,134 @@ public class CheckingController {
         }
 
         return "checking-user";
+    }
+
+    @GetMapping("/calendar")
+    @ResponseBody
+    public Map<String, Object> getCalendar(
+            @RequestParam("year") int year,
+            @RequestParam(value = "month", required = false, defaultValue = "0") int month,
+            @RequestParam(value = "login", required = false) String login,
+            HttpSession session) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            TokenResponse tokenResponse = (TokenResponse) session.getAttribute("tokenResponse");
+            if (tokenResponse == null) {
+                logger.warn("No token in session for /calendar request");
+                response.put("error", "Authentication required");
+                return response;
+            }
+
+            String token = apiService.getAccessToken();
+            logger.info("Fetching calendar for year: {}, month: {}, login: {}", year, month, login);
+
+            String userId = login != null && !login.isEmpty() ? apiService.getIdUsers(login, token) : null;
+            if (userId == null && login != null && !login.isEmpty()) {
+                logger.warn("User not found for login: {}", login);
+                response.put("error", "User not found for login: " + login);
+                return response;
+            }
+
+            // Récupérer les données de CursusUser dès le début pour Milestone 3
+            CursusUser cursusUser = null;
+            List<Map<String, Object>> milestoneDates = new ArrayList<>();
+            if (userId != null) {
+                cursusUser = apiService.getCursusUser(userId, token);
+                if (cursusUser == null) {
+                    logger.warn("No CursusUser found for userId: {}", userId);
+                    response.put("milestones", new ArrayList<>());
+                    response.put("blackholed_at", null);
+                    response.put("milestoneDates", milestoneDates);
+                } else {
+                    // Log des milestones pour débogage
+                    logger.info("Raw milestones from CursusUser: {}", cursusUser.getMilestones());
+                    // Ajouter les milestones et la deadline
+                    List<Map<String, Object>> milestones = cursusUser.getMilestones().stream()
+                            .map(m -> {
+                                Map<String, Object> milestoneData = new HashMap<>();
+                                milestoneData.put("level", m.getLevel());
+                                String formattedDate = m.getDate() != null ? formatMilestoneDate(m.getDate()) : null;
+                                milestoneData.put("date", formattedDate);
+                                logger.info("Processed milestone: level={}, date={}", m.getLevel(), formattedDate);
+                                return milestoneData;
+                            })
+                            .collect(Collectors.toList());
+                    response.put("milestones", milestones);
+                    response.put("blackholed_at", cursusUser.getBlackholed_at());
+
+                    // Extraire les dates de début des milestones avec leurs niveaux entiers
+                    milestoneDates = cursusUser.getMilestones().stream()
+                            .filter(m -> m.getDate() != null)
+                            .map(m -> {
+                                Map<String, Object> milestoneInfo = new HashMap<>();
+                                milestoneInfo.put("level", m.getLevel());
+                                String formattedDate = formatMilestoneDate(m.getDate());
+                                milestoneInfo.put("date", formattedDate);
+                                logger.info("Processed milestoneDate: level={}, date={}", m.getLevel(), formattedDate);
+                                return milestoneInfo;
+                            })
+                            .collect(Collectors.toList());
+                    response.put("milestoneDates", milestoneDates);
+                }
+            } else {
+                response.put("milestones", new ArrayList<>());
+                response.put("blackholed_at", null);
+                response.put("milestoneDates", milestoneDates);
+            }
+
+            LocalDate startDate;
+            LocalDate endDate;
+
+            if (month > 0) {
+                startDate = LocalDate.of(year, month, 1);
+                endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
+            } else {
+                startDate = LocalDate.of(year, 1, 1);
+                endDate = LocalDate.of(year, 12, 31);
+            }
+
+            List<LocationStat> stats = new ArrayList<>();
+            if (userId != null) {
+                UserLocationStat userStat = userLocationStatsService.getUserLocationStats(
+                        userId, token, startDate.format(DATE_FORMATTER), endDate.format(DATE_FORMATTER));
+                stats = userStat.filterStatsBetween(startDate.format(DATE_FORMATTER), endDate.format(DATE_FORMATTER));
+            }
+
+            List<String> presenceDays = stats.stream()
+                    .filter(stat -> stat.getDuration() != null && !stat.getDuration().isZero())
+                    .map(stat -> stat.getDate().format(DATE_FORMATTER))
+                    .collect(Collectors.toList());
+
+            response.put("presence", presenceDays);
+
+            logger.info("Returning {} presence days and {} milestone dates for user {}", presenceDays.size(), milestoneDates.size(), login);
+            return response;
+
+        } catch (Exception e) {
+            logger.error("Error fetching calendar data for user {}: {}", login, e.getMessage(), e);
+            response.put("error", "Erreur lors de la récupération des données du calendrier: " + e.getMessage());
+            return response;
+        }
+    }
+
+    private boolean isValidDateRange(String startDate, String endDate) {
+        try {
+            LocalDate start = LocalDate.parse(startDate, DATE_FORMATTER);
+            LocalDate end = LocalDate.parse(endDate, DATE_FORMATTER);
+            return !end.isBefore(start);
+        } catch (DateTimeParseException e) {
+            logger.warn("Invalid date format: startDate={}, endDate={}", startDate, endDate);
+            return false;
+        }
+    }
+
+    private String formatMilestoneDate(String dateStr) {
+        try {
+            ZonedDateTime zdt = ZonedDateTime.parse(dateStr);
+            return zdt.toLocalDate().format(DATE_FORMATTER);
+        } catch (DateTimeParseException e) {
+            logger.warn("Invalid date format for milestone: {}", dateStr);
+            return null;
+        }
     }
 }

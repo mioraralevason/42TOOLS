@@ -1,6 +1,6 @@
 #!/bin/bash
 
-LOG_FILE="/home/mralevas/logfile.log"
+LOG_FILE="/home/tiavina/logfile.log"
 
 # Log function
 log() {
@@ -20,7 +20,7 @@ else
 fi
 
 # Virtual environment path
-VENV_PATH="/home/mralevas/Documents/GitHub/42TOOLS/SCRIPT/venv"
+VENV_PATH="/home/tiavina/Documents/GitHub/42TOOLS/SCRIPT/venv"
 
 # Create virtual environment if it doesn't exist
 if [ ! -d "$VENV_PATH" ]; then

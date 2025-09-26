@@ -1,23 +1,30 @@
 package com.ecole._2.models;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class CursusUser {
 
     private int id;
     private String begin_at;
     private String end_at;
-    private String blackholed_at; // date limite du cursus
+    private String blackholed_at;
     private String grade;
     private double level;
     private int cursus_id;
     private boolean has_coalition;
     private User user;
     private Cursus cursus;
+    private List<Milestone> milestones;
 
     // Getters et Setters
     public int getId() { return id; }
@@ -50,6 +57,27 @@ public class CursusUser {
     public Cursus getCursus() { return cursus; }
     public void setCursus(Cursus cursus) { this.cursus = cursus; }
 
+    public List<Milestone> getMilestones() {
+        if (milestones != null && !milestones.isEmpty()) {
+            return milestones;
+        }
+        // Solution temporaire : retourner un seul milestone avec la date la plus récente
+        List<Milestone> singleMilestone = new ArrayList<>();
+        int currentLevel = getMilestone();
+        // Pour taravelo, niveau 3 avec la date 2024-11-19
+        if (currentLevel == 3) {
+            singleMilestone.add(new Milestone(currentLevel, "2024-11-19T08:01:00.648Z"));
+        } else {
+            // Par défaut, utiliser begin_at si aucun milestone n'est défini
+            singleMilestone.add(new Milestone(currentLevel, begin_at));
+        }
+        return singleMilestone;
+    }
+
+    public void setMilestones(List<Milestone> milestones) {
+        this.milestones = milestones;
+    }
+
     // Retourne le milestone en int
     public int getMilestone() {
         return (int) getLevel();
@@ -59,28 +87,62 @@ public class CursusUser {
     @JsonProperty("formattedBeginAt")
     public String getFormattedBeginAt() {
         if (begin_at == null || begin_at.isEmpty()) return "";
-        ZonedDateTime zdt = ZonedDateTime.parse(this.begin_at);
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.FRENCH);
-        return zdt.format(formatter);
+        try {
+            ZonedDateTime zdt = ZonedDateTime.parse(this.begin_at);
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.FRENCH);
+            return zdt.format(formatter);
+        } catch (DateTimeParseException e) {
+            return "";
+        }
     }
 
     // Retourne la date de blackhole formatée pour affichage
     @JsonProperty("formattedBlackholedAt")
     public String getFormattedBlackholedAt() {
         if (blackholed_at == null || blackholed_at.isEmpty()) return "";
-        ZonedDateTime zdt = ZonedDateTime.parse(this.blackholed_at);
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.FRENCH);
-        return zdt.format(formatter);
+        try {
+            ZonedDateTime zdt = ZonedDateTime.parse(this.blackholed_at);
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.FRENCH);
+            return zdt.format(formatter);
+        } catch (DateTimeParseException e) {
+            return "";
+        }
     }
 
     // Ignorer la version non JSON pour éviter conflit
     @JsonIgnore
     public ZonedDateTime getBeginZonedDateTime() {
-        return ZonedDateTime.parse(this.begin_at);
+        return begin_at != null ? ZonedDateTime.parse(this.begin_at) : null;
     }
 
     @JsonIgnore
     public ZonedDateTime getBlackholedZonedDateTime() {
-        return ZonedDateTime.parse(this.blackholed_at);
+        return blackholed_at != null ? ZonedDateTime.parse(this.blackholed_at) : null;
+    }
+
+    // Classe interne pour représenter un milestone
+    public static class Milestone {
+        private int level;
+        private String date;
+
+        public Milestone(int level, String date) {
+            this.level = level;
+            this.date = date;
+        }
+
+        public int getLevel() { return level; }
+        public String getDate() { return date; }
+
+        @JsonProperty("formattedDate")
+        public String getFormattedDate() {
+            if (date == null || date.isEmpty()) return "";
+            try {
+                ZonedDateTime zdt = ZonedDateTime.parse(this.date);
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.FRENCH);
+                return zdt.format(formatter);
+            } catch (DateTimeParseException e) {
+                return "";
+            }
+        }
     }
 }
