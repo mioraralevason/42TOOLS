@@ -4,6 +4,7 @@ import "../index.css";
 const Calendar = ({ userResponse, kind, suggestions = [] }) => {
   const [view, setView] = useState("month");
   const [page, setPage] = useState(0);
+  const [year, setYear] = useState(new Date().getFullYear());
   const [calendarData, setCalendarData] = useState(null);
   const [login, setLogin] = useState(kind === "admin" ? "" : userResponse?.login || "");
   const [loading, setLoading] = useState(false);
@@ -11,7 +12,6 @@ const Calendar = ({ userResponse, kind, suggestions = [] }) => {
   const [filteredSuggestions, setFilteredSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
-  const year = new Date().getFullYear();
   const month = new Date().getMonth();
 
   const fetchCalendar = async (loginValue = "") => {
@@ -45,7 +45,7 @@ const Calendar = ({ userResponse, kind, suggestions = [] }) => {
     if (kind !== "admin" && userResponse?.login) {
       fetchCalendar(userResponse.login);
     }
-  }, [view, userResponse, kind]);
+  }, [view, year, userResponse, kind]);
 
   // Suggestions autocomplete login
   const handleLoginChange = (e) => {
@@ -239,10 +239,33 @@ const Calendar = ({ userResponse, kind, suggestions = [] }) => {
     );
   };
 
-  const handlePrev = () => setPage((p) => Math.max(0, p - 1));
+  const handlePrev = () => {
+    if (view === "year") {
+      setYear((prevYear) => prevYear - 1);
+      setPage(0);
+      if (kind !== "admin" && userResponse?.login) {
+        fetchCalendar(userResponse.login);
+      } else if (kind === "admin" && login) {
+        fetchCalendar(login);
+      }
+    } else {
+      setPage((p) => Math.max(0, p - 1));
+    }
+  };
+
   const handleNext = () => {
-    const maxPage = view === "quarter" ? 3 : view === "semester" ? 1 : 0;
-    setPage((p) => Math.min(maxPage, p + 1));
+    if (view === "year") {
+      setYear((prevYear) => prevYear + 1);
+      setPage(0);
+      if (kind !== "admin" && userResponse?.login) {
+        fetchCalendar(userResponse.login);
+      } else if (kind === "admin" && login) {
+        fetchCalendar(login);
+      }
+    } else {
+      const maxPage = view === "quarter" ? 3 : view === "semester" ? 1 : 0;
+      setPage((p) => Math.min(maxPage, p + 1));
+    }
   };
 
   return (
@@ -308,11 +331,13 @@ const Calendar = ({ userResponse, kind, suggestions = [] }) => {
         ) : calendarData ? (
           <>
             <div className="calendar-pagination">
-              <button onClick={handlePrev} disabled={page === 0}>
+              <button onClick={handlePrev} disabled={page === 0 && view !== "year"}>
                 ◀ Prev
               </button>
-              <span>Page {page + 1}</span>
-              <button onClick={handleNext}>Next ▶</button>
+              <span>{view === "year" ? `Year ${year}` : `Page ${page + 1}`}</span>
+              <button onClick={handleNext}>
+                Next ▶
+              </button>
             </div>
             {renderBlackholedAlert()}
             {renderCalendar()}
