@@ -30,6 +30,7 @@ const Calendar = ({ userResponse, kind, suggestions = [] }) => {
       const res = await fetch(`http://localhost:9090/calendar?${params}`, { credentials: "include" });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
+      console.log("Calendar data fetched:", data); // Debug log
       setCalendarData(data);
     } catch (err) {
       console.error("Erreur chargement calendrier :", err);
@@ -38,6 +39,13 @@ const Calendar = ({ userResponse, kind, suggestions = [] }) => {
       setLoading(false);
     }
   };
+
+  // Initial fetch for non-admin users
+  useEffect(() => {
+    if (kind !== "admin" && userResponse?.login) {
+      fetchCalendar(userResponse.login);
+    }
+  }, [view, userResponse, kind]);
 
   // Suggestions autocomplete login
   const handleLoginChange = (e) => {
@@ -64,25 +72,54 @@ const Calendar = ({ userResponse, kind, suggestions = [] }) => {
   };
 
   const generateMonthDays = (year, month) => {
-    const lastDay = new Date(year, month + 1, 0);
+    const firstDayOfMonth = new Date(year, month, 1).getDay();
+    const lastDay = new Date(year, month + 1, 0).getDate();
     const days = [];
-    for (let i = 1; i <= lastDay.getDate(); i++) {
+    const offset = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1; // Adjust for Monday start
+
+    // Check if blackholed date is within 3 weeks
+    let isBlackholedNear = false;
+    if (calendarData?.blackholed_at) {
+      try {
+        const today = new Date();
+        const blackholedDate = new Date(calendarData.blackholed_at);
+        const diffTime = blackholedDate - today;
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        isBlackholedNear = diffDays > 0 && diffDays <= 21;
+        console.log(
+          `Blackholed date: ${calendarData.blackholed_at}, Today: ${today.toISOString().split('T')[0]}, Diff: ${diffDays} days, isBlackholedNear: ${isBlackholedNear}`
+        ); // Debug log
+      } catch (e) {
+        console.error("Error parsing blackholed_at date:", e);
+      }
+    } else {
+      console.log("No blackholed_at date available");
+    }
+
+    // Add empty cells for offset
+    for (let i = 0; i < offset; i++) {
+      days.push({ day: null, isPresent: false, milestone: null, isDeadline: false, isBlackholedNear });
+    }
+
+    // Add actual days
+    for (let i = 1; i <= lastDay; i++) {
       const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(i).padStart(2, "0")}`;
       const isPresent = calendarData?.presence?.includes(dateStr);
 
-      // Vérifier si ce jour correspond à un milestone
+      // Check for milestone
       const milestone = calendarData?.milestones?.find((m) => {
         if (!m.date) return false;
         return m.date === dateStr;
       });
 
-      // Vérifier si ce jour correspond à la deadline (blackholed_at)
+      // Check for deadline (blackholed_at)
       const isDeadline = calendarData?.blackholed_at
-        ? new Date(calendarData.blackholed_at).toISOString().split("T")[0] === dateStr
+        ? calendarData.blackholed_at === dateStr
         : false;
 
-      days.push({ day: i, isPresent, milestone, isDeadline });
+      days.push({ day: i, isPresent, milestone, isDeadline, isBlackholedNear });
     }
+
     return days;
   };
 
@@ -103,18 +140,20 @@ const Calendar = ({ userResponse, kind, suggestions = [] }) => {
           {days.map((d, idx) => (
             <div
               key={idx}
-              className={`calendar-day ${d.isPresent ? "presence" : ""} ${
+              className={`calendar-day ${d.day ? "" : "empty"} ${d.isPresent ? "presence" : ""} ${
                 d.milestone ? "milestone" : ""
-              } ${d.isDeadline ? "deadline" : ""}`}
+              } ${d.isDeadline ? "deadline" : ""} ${d.isDeadline && d.isBlackholedNear ? "blink" : ""}`}
               title={
-                d.milestone
-                  ? `Milestone: Niveau ${d.milestone.level} (${d.milestone.date})`
-                  : d.isDeadline
-                  ? "Date limite (Blackholed)"
+                d.day
+                  ? d.milestone
+                    ? `Milestone: Niveau ${d.milestone.level} (${d.milestone.date})`
+                    : d.isDeadline
+                    ? "Date limite (Blackholed)"
+                    : ""
                   : ""
               }
             >
-              <span className="day-number">{d.day}</span>
+              {d.day && <span className="day-number">{d.day}</span>}
               {d.milestone && <span className="milestone-marker">🏆</span>}
               {d.isDeadline && <span className="deadline-marker">⚠️</span>}
             </div>
@@ -154,18 +193,47 @@ const Calendar = ({ userResponse, kind, suggestions = [] }) => {
     return null;
   };
 
-  const renderMilestoneDates = () => {
-    if (!calendarData?.milestoneDates || calendarData.milestoneDates.length === 0) {
-      return <p>Aucune date de début de milestone disponible.</p>;
+  const renderBlackholedAlert = () => {
+    if (!calendarData?.blackholed_at) return null;
+
+    const today = new Date();
+    const blackholedDate = new Date(calendarData.blackholed_at);
+    const diffDays = 21;
+
+    if (diffDays > 0 && diffDays <= 21) {
+      return (
+        <div className="alert-warning">
+          ⚠️ Attention : La date blackholed est dans {diffDays} jour{diffDays > 1 ? "s" : ""} !
+        </div>
+      );
     }
+    return null;
+  };
+
+  const renderImportantDates = () => {
     return (
-      <div className="milestone-dates">
-        <h4>Dates de début des milestones</h4>
-        <ul>
-          {calendarData.milestoneDates.map((m, index) => (
-            <li key={index}>Niveau {m.level}: {m.date}</li>
-          ))}
-        </ul>
+      <div className="important-dates">
+        <h4>Dates Importantes</h4>
+        {calendarData?.milestoneDates && calendarData.milestoneDates.length > 0 ? (
+          <div className="milestone-dates">
+            <h5>Milestones</h5>
+            <ul>
+              {calendarData.milestoneDates.map((m, index) => (
+                <li key={index}>Niveau {m.level}: {m.date}</li>
+              ))}
+            </ul>
+          </div>
+        ) : (
+          <p>Aucune date de milestone disponible.</p>
+        )}
+        {calendarData?.blackholed_at ? (
+          <div className="blackholed-date">
+            <h5>Date Blackholed</h5>
+            <p>{calendarData.blackholed_at}</p>
+          </div>
+        ) : (
+          <p>Aucune date blackholed disponible.</p>
+        )}
       </div>
     );
   };
@@ -184,24 +252,26 @@ const Calendar = ({ userResponse, kind, suggestions = [] }) => {
         {kind === "admin" && (
           <div className="filter-box">
             <label htmlFor="login">Login Étudiant</label>
-            <input
-              type="text"
-              id="login"
-              placeholder="Entrer le login..."
-              value={login}
-              onChange={handleLoginChange}
-              onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-              autoComplete="off"
-            />
-            {showSuggestions && filteredSuggestions.length > 0 && (
-              <ul className="suggestions-list">
-                {filteredSuggestions.map((s, i) => (
-                  <li key={i} onMouseDown={() => handleSuggestionClick(s)}>
-                    {s}
-                  </li>
-                ))}
-              </ul>
-            )}
+            <div className="input-container">
+              <input
+                type="text"
+                id="login"
+                placeholder="Entrer le login..."
+                value={login}
+                onChange={handleLoginChange}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                autoComplete="off"
+              />
+              {showSuggestions && filteredSuggestions.length > 0 && (
+                <ul className="suggestions-list">
+                  {filteredSuggestions.map((s, i) => (
+                    <li key={i} onMouseDown={() => handleSuggestionClick(s)}>
+                      {s}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
             <button type="button" onClick={() => fetchCalendar(login)}>
               Charger le Calendrier
             </button>
@@ -216,6 +286,9 @@ const Calendar = ({ userResponse, kind, suggestions = [] }) => {
             onChange={(e) => {
               setView(e.target.value);
               setPage(0);
+              if (kind !== "admin" && userResponse?.login) {
+                fetchCalendar(userResponse.login);
+              }
             }}
           >
             <option value="month">Mois</option>
@@ -228,9 +301,9 @@ const Calendar = ({ userResponse, kind, suggestions = [] }) => {
 
       <div className="results-section">
         {loading ? (
-          <p>⏳ Chargement du calendrier...</p>
+          <p className="loading">⏳ Chargement du calendrier...</p>
         ) : error ? (
-          <p style={{ color: "red" }}>{error}</p>
+          <p className="error">{error}</p>
         ) : calendarData ? (
           <>
             <div className="calendar-pagination">
@@ -240,11 +313,12 @@ const Calendar = ({ userResponse, kind, suggestions = [] }) => {
               <span>Page {page + 1}</span>
               <button onClick={handleNext}>Suivant ▶</button>
             </div>
+            {renderBlackholedAlert()}
             {renderCalendar()}
-            {renderMilestoneDates()}
+            {renderImportantDates()}
           </>
         ) : (
-          <p>Aucune donnée</p>
+          <p className="no-data">Aucune donnée disponible. Veuillez charger un calendrier.</p>
         )}
       </div>
     </div>

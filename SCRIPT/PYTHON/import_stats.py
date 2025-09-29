@@ -12,7 +12,7 @@ from datetime import date, timedelta
 # ===========================
 DB_NAME = "e42"
 DB_USER = "postgres"
-DB_PASSWORD = "tiavina"
+DB_PASSWORD = "Discovery@123456"
 DB_HOST = "localhost"
 DB_PORT = "5432"
 CAMPUS_ID = "65"

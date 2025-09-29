@@ -252,9 +252,9 @@ public class CheckingController {
                 return response;
             }
 
-            // Récupérer les données de CursusUser dès le début pour Milestone 3
             CursusUser cursusUser = null;
             List<Map<String, Object>> milestoneDates = new ArrayList<>();
+            String formattedBlackholedAt = null;
             if (userId != null) {
                 cursusUser = apiService.getCursusUser(userId, token);
                 if (cursusUser == null) {
@@ -265,7 +265,7 @@ public class CheckingController {
                 } else {
                     // Log des milestones pour débogage
                     logger.info("Raw milestones from CursusUser: {}", cursusUser.getMilestones());
-                    // Ajouter les milestones et la deadline
+                    // Ajouter les milestones
                     List<Map<String, Object>> milestones = cursusUser.getMilestones().stream()
                             .map(m -> {
                                 Map<String, Object> milestoneData = new HashMap<>();
@@ -277,9 +277,14 @@ public class CheckingController {
                             })
                             .collect(Collectors.toList());
                     response.put("milestones", milestones);
-                    response.put("blackholed_at", cursusUser.getBlackholed_at());
 
-                    // Extraire les dates de début des milestones avec leurs niveaux entiers
+                    // Format blackholed_at to yyyy-MM-dd
+                    formattedBlackholedAt = cursusUser.getBlackholed_at() != null
+                            ? formatMilestoneDate(cursusUser.getBlackholed_at())
+                            : null;
+                    response.put("blackholed_at", formattedBlackholedAt);
+
+                    // Extraire les dates de début des milestones
                     milestoneDates = cursusUser.getMilestones().stream()
                             .filter(m -> m.getDate() != null)
                             .map(m -> {
@@ -324,7 +329,8 @@ public class CheckingController {
 
             response.put("presence", presenceDays);
 
-            logger.info("Returning {} presence days and {} milestone dates for user {}", presenceDays.size(), milestoneDates.size(), login);
+            logger.info("Returning {} presence days and {} milestone dates for user {}", presenceDays.size(),
+                    milestoneDates.size(), login);
             return response;
 
         } catch (Exception e) {

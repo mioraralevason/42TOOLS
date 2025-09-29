@@ -13,7 +13,7 @@ public class DatabaseConnection {
     private static final Logger logger = LoggerFactory.getLogger(DatabaseConnection.class);
     private static final String URL = "jdbc:postgresql://localhost:5432/e42";
     private static final String USER = "postgres";
-    private static final String PASSWORD = "tiavina";
+    private static final String PASSWORD = "Discovery@123456";
 
     public Connection getConnection() throws SQLException {
         try {

@@ -34,6 +34,11 @@
   max-width: 360px; /* Légèrement réduit pour responsivité */
 }
 
+.input-container {
+  position: relative;
+  width: 100%;
+}
+
 .filter-box input {
   width: 100%;
   padding: 8px 12px;
@@ -224,7 +229,13 @@
   border: 1px solid var(--border-color, #e5e7eb); /* Bordure carrée */
 }
 
-.calendar-day:hover {
+.calendar-day.empty {
+  background: transparent;
+  border: none;
+  cursor: default;
+}
+
+.calendar-day:hover:not(.empty) {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
@@ -291,15 +302,15 @@
   gap: 16px; /* Espacement accru entre les mois */
 }
 
-/* Milestone dates section */
-.milestone-dates {
+/* Important dates section */
+.important-dates {
   margin-top: 16px;
   padding: 12px;
   background: var(--primary-bg, #ffffff);
   box-shadow: var(--shadow, 0 4px 12px rgba(0, 0, 0, 0.05));
 }
 
-.milestone-dates h4 {
+.important-dates h4 {
   font-size: 1.2rem;
   font-weight: 600;
   color: var(--text-primary, #1f2937);
@@ -307,16 +318,51 @@
   font-family: 'Inter', sans-serif;
 }
 
-.milestone-dates ul {
+.important-dates h5 {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-primary, #1f2937);
+  margin: 8px 0;
+  font-family: 'Inter', sans-serif;
+}
+
+.important-dates ul {
   list-style: none;
   padding: 0;
 }
 
-.milestone-dates li {
+.important-dates li,
+.important-dates p {
   font-size: 0.95rem;
   color: var(--text-primary, #1f2937);
   margin-bottom: 6px;
   font-family: 'Inter', sans-serif;
+}
+
+/* Alert warning */
+.alert-warning {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.1));
+  border: 1px solid var(--accent-red, #ef4444);
+  color: var(--accent-red, #ef4444);
+  font-size: 0.95rem;
+  font-weight: 500;
+  text-align: center;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Loading and error states */
+.loading,
+.error,
+.no-data {
+  font-size: 0.95rem;
+  text-align: center;
+  font-family: 'Inter', sans-serif;
+}
+
+.error {
+  color: var(--accent-red, #ef4444);
 }
 
 /* Responsive */
@@ -353,12 +399,20 @@
     font-size: 1rem;
   }
 
-  .milestone-dates h4 {
+  .important-dates h4 {
     font-size: 1rem;
+  }
+
+  .important-dates h5 {
+    font-size: 0.9rem;
   }
 
   .day-number {
     font-size: 0.85rem;
+  }
+
+  .alert-warning {
+    font-size: 0.9rem;
   }
 }
 
@@ -396,11 +450,19 @@
     font-size: 0.9rem;
   }
 
-  .milestone-dates h4 {
+  .important-dates h4 {
     font-size: 0.9rem;
+  }
+
+  .important-dates h5 {
+    font-size: 0.85rem;
   }
 
   .day-number {
     font-size: 0.8rem;
+  }
+
+  .alert-warning {
+    font-size: 0.85rem;
   }
 }
