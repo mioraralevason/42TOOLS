@@ -33,8 +33,8 @@ const Calendar = ({ userResponse, kind, suggestions = [] }) => {
       console.log("Calendar data fetched:", data); // Debug log
       setCalendarData(data);
     } catch (err) {
-      console.error("Erreur chargement calendrier :", err);
-      setError(err.message || "Erreur lors du chargement du calendrier");
+      console.error("Error loading calendar:", err);
+      setError(err.message || "Error loading calendar");
     } finally {
       setLoading(false);
     }
@@ -125,8 +125,8 @@ const Calendar = ({ userResponse, kind, suggestions = [] }) => {
 
   const renderMonth = (year, month) => {
     const days = generateMonthDays(year, month);
-    const monthName = new Date(year, month).toLocaleString("fr-FR", { month: "long" });
-    const weekdays = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
+    const monthName = new Date(year, month).toLocaleString("en-US", { month: "long" });
+    const weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
     return (
       <div className="calendar-block" key={`${year}-${month}`}>
@@ -146,9 +146,9 @@ const Calendar = ({ userResponse, kind, suggestions = [] }) => {
               title={
                 d.day
                   ? d.milestone
-                    ? `Milestone: Niveau ${d.milestone.level} (${d.milestone.date})`
+                    ? `Milestone: Level ${d.milestone.level} (${d.milestone.date})`
                     : d.isDeadline
-                    ? "Date limite (Blackholed)"
+                    ? "Deadline (Blackholed)"
                     : ""
                   : ""
               }
@@ -198,12 +198,13 @@ const Calendar = ({ userResponse, kind, suggestions = [] }) => {
 
     const today = new Date();
     const blackholedDate = new Date(calendarData.blackholed_at);
-    const diffDays = 21;
+    const diffTime = blackholedDate - today;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
     if (diffDays > 0 && diffDays <= 21) {
       return (
         <div className="alert-warning">
-          ⚠️ Attention : La date blackholed est dans {diffDays} jour{diffDays > 1 ? "s" : ""} !
+          ⚠️ Warning: The blackholed date is in {diffDays} day{diffDays > 1 ? "s" : ""}!
         </div>
       );
     }
@@ -213,26 +214,26 @@ const Calendar = ({ userResponse, kind, suggestions = [] }) => {
   const renderImportantDates = () => {
     return (
       <div className="important-dates">
-        <h4>Dates Importantes</h4>
+        <h4>Important Dates</h4>
         {calendarData?.milestoneDates && calendarData.milestoneDates.length > 0 ? (
           <div className="milestone-dates">
             <h5>Milestones</h5>
             <ul>
               {calendarData.milestoneDates.map((m, index) => (
-                <li key={index}>Niveau {m.level}: {m.date}</li>
+                <li key={index}>Level {m.level}: {m.date}</li>
               ))}
             </ul>
           </div>
         ) : (
-          <p>Aucune date de milestone disponible.</p>
+          <p>No milestone dates.</p>
         )}
         {calendarData?.blackholed_at ? (
           <div className="blackholed-date">
-            <h5>Date Blackholed</h5>
+            <h5>Blackholed Date</h5>
             <p>{calendarData.blackholed_at}</p>
           </div>
         ) : (
-          <p>Aucune date blackholed disponible.</p>
+          <p>No blackholed date.</p>
         )}
       </div>
     );
@@ -247,16 +248,16 @@ const Calendar = ({ userResponse, kind, suggestions = [] }) => {
   return (
     <div className="checking-admin">
       <div className="checking-form">
-        <h2>Calendrier Étudiant</h2>
+        <h2>Student Calendar</h2>
 
         {kind === "admin" && (
           <div className="filter-box">
-            <label htmlFor="login">Login Étudiant</label>
+            <label htmlFor="login">Student Login</label>
             <div className="input-container">
               <input
                 type="text"
                 id="login"
-                placeholder="Entrer le login..."
+                placeholder="Enter login..."
                 value={login}
                 onChange={handleLoginChange}
                 onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
@@ -273,13 +274,13 @@ const Calendar = ({ userResponse, kind, suggestions = [] }) => {
               )}
             </div>
             <button type="button" onClick={() => fetchCalendar(login)}>
-              Charger le Calendrier
+              Fetch Calendar
             </button>
           </div>
         )}
 
         <div className="date-group">
-          <label htmlFor="view">Vue</label>
+          <label htmlFor="view">View</label>
           <select
             id="view"
             value={view}
@@ -291,34 +292,34 @@ const Calendar = ({ userResponse, kind, suggestions = [] }) => {
               }
             }}
           >
-            <option value="month">Mois</option>
-            <option value="quarter">Trimestre</option>
-            <option value="semester">Semestre</option>
-            <option value="year">Année</option>
+            <option value="month">Month</option>
+            <option value="quarter">Quarter</option>
+            <option value="semester">Semester</option>
+            <option value="year">Year</option>
           </select>
         </div>
       </div>
 
       <div className="results-section">
         {loading ? (
-          <p className="loading">⏳ Chargement du calendrier...</p>
+          <p className="loading">⏳ Loading Calendar...</p>
         ) : error ? (
           <p className="error">{error}</p>
         ) : calendarData ? (
           <>
             <div className="calendar-pagination">
               <button onClick={handlePrev} disabled={page === 0}>
-                ◀ Précédent
+                ◀ Prev
               </button>
               <span>Page {page + 1}</span>
-              <button onClick={handleNext}>Suivant ▶</button>
+              <button onClick={handleNext}>Next ▶</button>
             </div>
             {renderBlackholedAlert()}
             {renderCalendar()}
             {renderImportantDates()}
           </>
         ) : (
-          <p className="no-data">Aucune donnée disponible. Veuillez charger un calendrier.</p>
+          <p className="no-data">No data available. Please fetch a calendar.</p>
         )}
       </div>
     </div>
