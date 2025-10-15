@@ -71,4 +71,9 @@ public class UserPresenceRate {
     public void setTauxPresence(Double tauxPresence) {
         this.tauxPresence = tauxPresence;
     }
+
+    public void setMoyenneHeureDepuisDebut(double double1) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'setMoyenneHeureDepuisDebut'");
+    }
 }

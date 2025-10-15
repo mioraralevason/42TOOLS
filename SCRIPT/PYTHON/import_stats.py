@@ -58,10 +58,10 @@ def parse_duration(duration_str):
 # ===========================
 def import_stats():
     try:
-        with open(f"../SH/DATA/{CAMPUS_ID}/LOCATION_STATS/campus{CAMPUS_ID}_location_stats_yesterday.json", "r", encoding="utf-8") as f:
+        with open(f"../SH/DATA/{CAMPUS_ID}/LOCATION_STATS/campus{CAMPUS_ID}_location_stats.json", "r", encoding="utf-8") as f:
             stats_list = json.load(f)
     except FileNotFoundError:
-        print(f"❌ Erreur : campus{CAMPUS_ID}_location_stats_yesterday.json introuvable")
+        print(f"❌ Erreur : campus{CAMPUS_ID}_location_stats.json introuvable")
         return
     except json.JSONDecodeError as e:
         print(f"❌ Erreur lors du décodage JSON : {e}")

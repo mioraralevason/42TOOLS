@@ -1,5 +1,799 @@
-bonjour ,maintenant on va faire afficher une petite alerte si proche du blackholed et 
-style sur le calendar jsx 
-genre prendre en compte le date du blackholed et regarder si le date d ajourdhui et le blackholed est 
-superieur a 3 semaines ,
-je veux aussi affiher en bas comme la date du milestone la date du blackholed
+import React, { useState, useEffect } from "react";
+import "../index.css";
+
+const Calendar = ({ userResponse, kind, suggestions = [] }) => {
+  const [view, setView] = useState("month");
+  const [page, setPage] = useState(0);
+  const [calendarData, setCalendarData] = useState(null);
+  const [login, setLogin] = useState(kind === "admin" ? "" : userResponse?.login || "");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [filteredSuggestions, setFilteredSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  const year = new Date().getFullYear();
+  const month = new Date().getMonth();
+
+  const fetchCalendar = async (loginValue = "") => {
+    try {
+      setLoading(true);
+      setError(null);
+      const params = new URLSearchParams({ year: year.toString() });
+      if (view === "month") params.append("month", (month + 1).toString());
+
+      if (kind === "admin" && loginValue.trim() !== "") {
+        params.append("login", loginValue.trim());
+      } else if (kind !== "admin" && userResponse?.login) {
+        params.append("login", userResponse.login);
+      }
+
+      const res = await fetch(`http://localhost:9090/calendar?${params}`, { credentials: "include" });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      console.log("Calendar data fetched:", data); // Debug log
+      setCalendarData(data);
+    } catch (err) {
+      console.error("Erreur chargement calendrier :", err);
+      setError(err.message || "Erreur lors du chargement du calendrier");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Initial fetch for non-admin users
+  useEffect(() => {
+    if (kind !== "admin" && userResponse?.login) {
+      fetchCalendar(userResponse.login);
+    }
+  }, [view, userResponse, kind]);
+
+  // Suggestions autocomplete login
+  const handleLoginChange = (e) => {
+    const value = e.target.value;
+    setLogin(value);
+
+    if (kind === "admin" && value.trim() !== "") {
+      const matches = suggestions
+        .filter((s) => s.toLowerCase().includes(value.toLowerCase()))
+        .slice(0, 5);
+      setFilteredSuggestions(matches);
+      setShowSuggestions(matches.length > 0);
+    } else {
+      setFilteredSuggestions([]);
+      setShowSuggestions(false);
+    }
+  };
+
+  const handleSuggestionClick = (s) => {
+    setLogin(s);
+    setFilteredSuggestions([]);
+    setShowSuggestions(false);
+    fetchCalendar(s);
+  };
+
+  const generateMonthDays = (year, month) => {
+    const firstDayOfMonth = new Date(year, month, 1).getDay();
+    const lastDay = new Date(year, month + 1, 0).getDate();
+    const days = [];
+    const offset = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1; // Adjust for Monday start
+
+    // Check if blackholed date is within 3 weeks
+    let isBlackholedNear = false;
+    if (calendarData?.blackholed_at) {
+      try {
+        const today = new Date();
+        const blackholedDate = new Date(calendarData.blackholed_at);
+        const diffTime = blackholedDate - today;
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        isBlackholedNear = diffDays > 0 && diffDays <= 21;
+        console.log(
+          `Blackholed date: ${calendarData.blackholed_at}, Today: ${today.toISOString().split('T')[0]}, Diff: ${diffDays} days, isBlackholedNear: ${isBlackholedNear}`
+        ); // Debug log
+      } catch (e) {
+        console.error("Error parsing blackholed_at date:", e);
+      }
+    } else {
+      console.log("No blackholed_at date available");
+    }
+
+    // Add empty cells for offset
+    for (let i = 0; i < offset; i++) {
+      days.push({ day: null, isPresent: false, milestone: null, isDeadline: false, isBlackholedNear });
+    }
+
+    // Add actual days
+    for (let i = 1; i <= lastDay; i++) {
+      const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(i).padStart(2, "0")}`;
+      const isPresent = calendarData?.presence?.includes(dateStr);
+
+      // Check for milestone
+      const milestone = calendarData?.milestones?.find((m) => {
+        if (!m.date) return false;
+        return m.date === dateStr;
+      });
+
+      // Check for deadline (blackholed_at)
+      const isDeadline = calendarData?.blackholed_at
+        ? calendarData.blackholed_at === dateStr
+        : false;
+
+      days.push({ day: i, isPresent, milestone, isDeadline, isBlackholedNear });
+    }
+
+    return days;
+  };
+
+  const renderMonth = (year, month) => {
+    const days = generateMonthDays(year, month);
+    const monthName = new Date(year, month).toLocaleString("fr-FR", { month: "long" });
+    const weekdays = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
+
+    return (
+      <div className="calendar-block" key={`${year}-${month}`}>
+        <h4>{monthName} {year}</h4>
+        <div className="calendar-weekdays">
+          {weekdays.map((d, idx) => (
+            <span key={idx}>{d}</span>
+          ))}
+        </div>
+        <div className="calendar-grid">
+          {days.map((d, idx) => (
+            <div
+              key={idx}
+              className={`calendar-day ${d.day ? "" : "empty"} ${d.isPresent ? "presence" : ""} ${
+                d.milestone ? "milestone" : ""
+              } ${d.isDeadline ? "deadline" : ""} ${d.isDeadline && d.isBlackholedNear ? "blink" : ""}`}
+              title={
+                d.day
+                  ? d.milestone
+                    ? `Milestone: Niveau ${d.milestone.level} (${d.milestone.date})`
+                    : d.isDeadline
+                    ? "Date limite (Blackholed)"
+                    : ""
+                  : ""
+              }
+            >
+              {d.day && <span className="day-number">{d.day}</span>}
+              {d.milestone && <span className="milestone-marker">🏆</span>}
+              {d.isDeadline && <span className="deadline-marker">⚠️</span>}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  const renderCalendar = () => {
+    const baseYear = year;
+    const baseMonth = month;
+    if (view === "month") return renderMonth(baseYear, baseMonth);
+    if (view === "quarter") {
+      const startMonth = page * 3;
+      return (
+        <div className="calendar-multi">
+          {Array.from({ length: 3 }, (_, i) => renderMonth(baseYear, startMonth + i))}
+        </div>
+      );
+    }
+    if (view === "semester") {
+      const startMonth = page * 6;
+      return (
+        <div className="calendar-multi">
+          {Array.from({ length: 6 }, (_, i) => renderMonth(baseYear, startMonth + i))}
+        </div>
+      );
+    }
+    if (view === "year") {
+      return (
+        <div className="calendar-multi">
+          {Array.from({ length: 12 }, (_, i) => renderMonth(baseYear, i))}
+        </div>
+      );
+    }
+    return null;
+  };
+
+  const renderBlackholedAlert = () => {
+    if (!calendarData?.blackholed_at) return null;
+
+    const today = new Date();
+    const blackholedDate = new Date(calendarData.blackholed_at);
+    const diffDays = 21;
+
+    if (diffDays > 0 && diffDays <= 21) {
+      return (
+        <div className="alert-warning">
+          ⚠️ Attention : La date blackholed est dans {diffDays} jour{diffDays > 1 ? "s" : ""} !
+        </div>
+      );
+    }
+    return null;
+  };
+
+  const renderImportantDates = () => {
+    return (
+      <div className="important-dates">
+        <h4>Dates Importantes</h4>
+        {calendarData?.milestoneDates && calendarData.milestoneDates.length > 0 ? (
+          <div className="milestone-dates">
+            <h5>Milestones</h5>
+            <ul>
+              {calendarData.milestoneDates.map((m, index) => (
+                <li key={index}>Niveau {m.level}: {m.date}</li>
+              ))}
+            </ul>
+          </div>
+        ) : (
+          <p>Aucune date de milestone disponible.</p>
+        )}
+        {calendarData?.blackholed_at ? (
+          <div className="milestone-dates">
+            <h5>Date Blackholed</h5>
+            <p>{calendarData.blackholed_at}</p>
+          </div>
+        ) : (
+          <p>Aucune date blackholed disponible.</p>
+        )}
+      </div>
+    );
+  };
+
+  const handlePrev = () => setPage((p) => Math.max(0, p - 1));
+  const handleNext = () => {
+    const maxPage = view === "quarter" ? 3 : view === "semester" ? 1 : 0;
+    setPage((p) => Math.min(maxPage, p + 1));
+  };
+
+  return (
+    <div className="checking-admin">
+      <div className="checking-form">
+        <h2>Calendrier Étudiant</h2>
+
+        {kind === "admin" && (
+          <div className="filter-box">
+            <label htmlFor="login">Login Étudiant</label>
+            <div className="input-container">
+              <input
+                type="text"
+                id="login"
+                placeholder="Entrer le login..."
+                value={login}
+                onChange={handleLoginChange}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                autoComplete="off"
+              />
+              {showSuggestions && filteredSuggestions.length > 0 && (
+                <ul className="suggestions-list">
+                  {filteredSuggestions.map((s, i) => (
+                    <li key={i} onMouseDown={() => handleSuggestionClick(s)}>
+                      {s}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <button type="button" onClick={() => fetchCalendar(login)}>
+              Charger le Calendrier
+            </button>
+          </div>
+        )}
+
+        <div className="date-group">
+          <label htmlFor="view">Vue</label>
+          <select
+            id="view"
+            value={view}
+            onChange={(e) => {
+              setView(e.target.value);
+              setPage(0);
+              if (kind !== "admin" && userResponse?.login) {
+                fetchCalendar(userResponse.login);
+              }
+            }}
+          >
+            <option value="month">Mois</option>
+            <option value="quarter">Trimestre</option>
+            <option value="semester">Semestre</option>
+            <option value="year">Année</option>
+          </select>
+        </div>
+      </div>
+
+      <div className="results-section">
+        {loading ? (
+          <p className="loading">⏳ Chargement du calendrier...</p>
+        ) : error ? (
+          <p className="error">{error}</p>
+        ) : calendarData ? (
+          <>
+            <div className="calendar-pagination">
+              <button onClick={handlePrev} disabled={page === 0}>
+                ◀ Précédent
+              </button>
+              <span>Page {page + 1}</span>
+              <button onClick={handleNext}>Suivant ▶</button>
+            </div>
+            {renderBlackholedAlert()}
+            {renderCalendar()}
+            {renderImportantDates()}
+          </>
+        ) : (
+          <p className="no-data">Aucune donnée disponible. Veuillez charger un calendrier.</p>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default Calendar;
+
+calendar.css:/* Container principal */
+.checking-admin {
+  padding: 20px;
+  max-width: 1100px; /* Réduit pour éviter un look trop large */
+  margin: 0 auto;
+  background: var(--secondary-bg, #f9fafb);
+  box-shadow: var(--shadow, 0 4px 12px rgba(0, 0, 0, 0.05));
+}
+
+/* Formulaire filtre / login / view */
+.checking-form {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.checking-form h2 {
+  font-size: 1.8rem;
+  color: var(--accent-cyan, #0ea5e9);
+  text-align: center;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Groupe filtre */
+.filter-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 360px; /* Légèrement réduit pour responsivité */
+}
+
+.input-container {
+  position: relative;
+  width: 100%;
+}
+
+.filter-box input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--accent-cyan, #0ea5e9);
+  font-size: 0.95rem;
+  font-family: 'Inter', sans-serif;
+  outline: none;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.filter-box input:focus {
+  border-color: var(--accent-blue, #3b82f6);
+  box-shadow: 0 0 6px rgba(59, 130, 246, 0.3);
+}
+
+.filter-box button {
+  padding: 8px 16px;
+  background: var(--accent-cyan, #0ea5e9);
+  color: var(--primary-bg, #ffffff);
+  border: none;
+  font-size: 0.95rem;
+  font-weight: 500;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.filter-box button:hover {
+  background: var(--accent-blue, #3b82f6);
+  transform: translateY(-1px);
+}
+
+/* Suggestions autocomplete */
+.suggestions-list {
+  position: absolute;
+  background: var(--primary-bg, #ffffff);
+  border: 1px solid var(--accent-cyan, #0ea5e9);
+  width: 100%;
+  max-width: 360px;
+  margin-top: 4px;
+  box-shadow: var(--shadow, 0 4px 12px rgba(0, 0, 0, 0.05));
+  z-index: 10;
+}
+
+.suggestions-list li {
+  padding: 8px 12px;
+  font-size: 0.95rem;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.suggestions-list li:hover {
+  background: var(--accent-cyan, #0ea5e9);
+  color: var(--primary-bg, #ffffff);
+}
+
+/* Groupe View */
+.date-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.date-group label {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-primary, #1f2937);
+  font-family: 'Inter', sans-serif;
+}
+
+#view {
+  padding: 8px 12px;
+  border: 1px solid var(--accent-cyan, #0ea5e9);
+  background: var(--primary-bg, #ffffff);
+  color: var(--text-primary, #1f2937);
+  font-size: 0.95rem;
+  font-weight: 500;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+#view:hover,
+#view:focus {
+  background: var(--accent-cyan, #0ea5e9);
+  color: var(--primary-bg, #ffffff);
+  border-color: var(--accent-blue, #3b82f6);
+  outline: none;
+}
+
+/* Pagination */
+.calendar-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.calendar-pagination button {
+  padding: 8px 16px;
+  background: var(--accent-cyan, #0ea5e9);
+  color: var(--primary-bg, #ffffff);
+  border: none;
+  font-size: 0.95rem;
+  font-weight: 500;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.calendar-pagination button:disabled {
+  background: var(--secondary-bg, #e5e7eb);
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.calendar-pagination button:hover:not(:disabled) {
+  background: var(--accent-blue, #3b82f6);
+  transform: translateY(-1px);
+}
+
+.calendar-pagination span {
+  font-size: 1rem;
+  color: var(--text-primary, #1f2937);
+  font-family: 'Inter', sans-serif;
+}
+
+/* Calendar blocks */
+.calendar-block {
+  background: var(--primary-bg, #ffffff);
+  padding: 12px;
+  box-shadow: var(--shadow, 0 4px 12px rgba(0, 0, 0, 0.05));
+  margin-bottom: 16px;
+}
+
+/* Month title */
+.calendar-block h4 {
+  text-align: center;
+  font-weight: 600;
+  color: var(--text-primary, #1f2937);
+  margin-bottom: 8px;
+  font-size: 1.2rem;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Days of week header */
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  margin-bottom: 6px;
+  background: var(--secondary-bg, #f1f5f9);
+  padding: 6px;
+}
+
+.calendar-weekdays span {
+  font-weight: 600;
+  color: var(--text-primary, #1f2937);
+  text-align: center;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Grid des jours */
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px; /* Espacement accru pour clarté */
+}
+
+.calendar-day {
+  background: var(--secondary-bg, #f1f5f9);
+  padding: 6px;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  min-height: 45px; /* Réduit pour éviter un look trop grand */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  border: 1px solid var(--border-color, #e5e7eb); /* Bordure carrée */
+}
+
+.calendar-day.empty {
+  background: transparent;
+  border: none;
+  cursor: default;
+}
+
+.calendar-day:hover:not(.empty) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Numéro du jour */
+.day-number {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-primary, #1f2937);
+  font-family: 'Inter', sans-serif;
+}
+
+/* Présence */
+.calendar-day.presence {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.1));
+  border: 1px solid var(--accent-green, #22c55e);
+  color: var(--text-primary, #1f2937);
+}
+
+.calendar-day.presence .day-number {
+  color: var(--accent-green, #22c55e);
+}
+
+/* Styles pour milestones */
+.calendar-day.milestone {
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.2), rgba(234, 179, 8, 0.1));
+  border: 1px solid var(--accent-yellow, #eab308);
+  color: var(--text-primary, #1f2937);
+}
+
+.calendar-day.milestone .day-number {
+  color: var(--accent-yellow, #eab308);
+}
+
+.milestone-marker {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  font-size: 0.75rem;
+}
+
+/* Styles pour deadlines */
+.calendar-day.deadline {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.1));
+  border: 1px solid var(--accent-red, #ef4444);
+  color: var(--text-primary, #1f2937);
+}
+
+.calendar-day.deadline .day-number {
+  color: var(--accent-red, #ef4444);
+}
+
+.deadline-marker {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  font-size: 0.75rem;
+}
+
+/* Multi month grid */
+.calendar-multi {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 300px)); /* Espacement optimisé */
+  gap: 16px; /* Espacement accru entre les mois */
+}
+
+/* Important dates section */
+.important-dates {
+  margin-top: 16px;
+  padding: 12px;
+  background: var(--primary-bg, #ffffff);
+  box-shadow: var(--shadow, 0 4px 12px rgba(0, 0, 0, 0.05));
+}
+
+.important-dates h4 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text-primary, #1f2937);
+  margin-bottom: 8px;
+  font-family: 'Inter', sans-serif;
+}
+
+.important-dates h5 {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-primary, #1f2937);
+  margin: 8px 0;
+  font-family: 'Inter', sans-serif;
+}
+
+.important-dates ul {
+  list-style: none;
+  padding: 0;
+}
+
+.important-dates li,
+.important-dates p {
+  font-size: 0.95rem;
+  color: var(--text-primary, #1f2937);
+  margin-bottom: 6px;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Alert warning */
+.alert-warning {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.1));
+  border: 1px solid var(--accent-red, #ef4444);
+  color: var(--accent-red, #ef4444);
+  font-size: 0.95rem;
+  font-weight: 500;
+  text-align: center;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Loading and error states */
+.loading,
+.error,
+.no-data {
+  font-size: 0.95rem;
+  text-align: center;
+  font-family: 'Inter', sans-serif;
+}
+
+.error {
+  color: var(--accent-red, #ef4444);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .checking-admin {
+    padding: 12px;
+  }
+
+  .calendar-grid,
+  .calendar-weekdays {
+    gap: 4px;
+  }
+
+  .calendar-day {
+    padding: 4px;
+    min-height: 38px; /* Réduit pour petits écrans */
+    font-size: 0.75rem;
+  }
+
+  .calendar-weekdays span {
+    font-size: 0.75rem;
+  }
+
+  .filter-box {
+    max-width: 100%;
+  }
+
+  .calendar-multi {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* Plus compact */
+    gap: 12px;
+  }
+
+  .calendar-block h4 {
+    font-size: 1rem;
+  }
+
+  .important-dates h4 {
+    font-size: 1rem;
+  }
+
+  .important-dates h5 {
+    font-size: 0.9rem;
+  }
+
+  .day-number {
+    font-size: 0.85rem;
+  }
+
+  .alert-warning {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .checking-admin {
+    padding: 8px;
+  }
+
+  .calendar-day {
+    min-height: 32px;
+    font-size: 0.7rem;
+  }
+
+  .calendar-weekdays span {
+    font-size: 0.7rem;
+  }
+
+  .calendar-multi {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 8px;
+  }
+
+  .filter-box input,
+  .filter-box button,
+  #view {
+    font-size: 0.85rem;
+    padding: 6px 10px;
+  }
+
+  .checking-form h2 {
+    font-size: 1.5rem;
+  }
+
+  .calendar-block h4 {
+    font-size: 0.9rem;
+  }
+
+  .important-dates h4 {
+    font-size: 0.9rem;
+  }
+
+  .important-dates h5 {
+    font-size: 0.85rem;
+  }
+
+  .day-number {
+    font-size: 0.8rem;
+  }
+
+  .alert-warning {
+    font-size: 0.85rem;
+  }
+}
+
+je veux que tu affiches en hover sur la date  du presence leur duration 

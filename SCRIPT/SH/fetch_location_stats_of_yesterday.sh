@@ -10,12 +10,13 @@ OUTPUT_DIR="DATA/$CAMPUS_ID/LOCATION_STATS"
 OUTPUT_FILE="$OUTPUT_DIR/campus${CAMPUS_ID}_location_stats_yesterday.json"
 PROGRESS_FILE="$OUTPUT_DIR/location_stats_progress_yesterday.txt"
 CHECKPOINT_FILE="$OUTPUT_DIR/location_stats_checkpoint_yesterday.json"
-
 mkdir -p "$OUTPUT_DIR"
 
 # Date d’hier et aujourd'hui, format YYYY-MM-DD
-BEGIN_AT="${1:-$(date -d '7 Days ago' +%Y-%m-%d)}"
-END_AT="${1:-$(date -d 'today' +%Y-%m-%d)}"
+
+
+BEGIN_AT="$(TZ='Indian/Antananarivo' date -d 'yesterday' +%Y-%m-%d)T00:00:00Z"
+END_AT="$(TZ='Indian/Antananarivo' date -d 'today' +%Y-%m-%d)T23:59:59Z"
 
 # Credentials
 CLIENT_ID="u-s4t2af-23f031abd5ab1c7afcd6b43148ddd70b2ae20692602fb8c142f94fabb55b5373"

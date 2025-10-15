@@ -45,6 +45,42 @@ public class StatsRepository {
 
         return executeQueryForUsers(sql, startDate, endDate, userId);
     }
+    
+
+    // --- Methode pour obtenir les moyennes d'heures d'un utilisateur ---
+public List<UserPresenceRate> getUserAverageHours(String login, LocalDate startDate, LocalDate endDate) {
+    String sql = "SELECT * FROM moyenne_heures_utilisateur(?)";
+    Connection connection = null;
+    PreparedStatement stmt = null;
+    ResultSet rs = null;
+    List<UserPresenceRate> results = new ArrayList<>();
+
+    try {
+        connection = dbConnection.getConnection();
+        stmt = connection.prepareStatement(sql);
+        stmt.setString(1, login);
+
+        rs = stmt.executeQuery();
+        while (rs.next()) {
+            UserPresenceRate taux = new UserPresenceRate();
+            taux.setLogin(rs.getString("login"));
+            taux.setMoyenneHeureDepuisDebut(rs.getDouble("moyenne_heure_depuis_debut"));
+            taux.setMoyenneHeureDepuisDebut(rs.getDouble("moyenne_heure_depuis_3_mois"));
+            taux.setMoyenneHeureDepuisDebut(rs.getDouble("moyenne_heure_depuis_1_mois"));
+            results.add(taux);
+        }
+
+        return results;
+    } catch (SQLException e) {
+        logger.error("Error executing query for user average hours: {}", e.getMessage());
+        throw new RuntimeException("Failed to retrieve user average hours", e);
+    } finally {
+        closeResources(connection, stmt, rs);
+    }
+}
+
+
+
 
     // --- Methode interne pour factoriser le code ---
     private List<UserPresenceRate> executeQueryForUsers(String sql, String startDate, String endDate, String userId) {

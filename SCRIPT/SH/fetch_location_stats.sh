@@ -10,13 +10,15 @@ OUTPUT_DIR="DATA/$CAMPUS_ID/LOCATION_STATS"
 OUTPUT_FILE="$OUTPUT_DIR/campus${CAMPUS_ID}_location_stats.json"
 PROGRESS_FILE="$OUTPUT_DIR/location_stats_progress.txt"
 CHECKPOINT_FILE="$OUTPUT_DIR/location_stats_checkpoint.json"
+LOG_FILE="$OUTPUT_DIR/location_stats.log"
 
 mkdir -p "$OUTPUT_DIR"
 
 # Date paramétrable (arg1 sinon défaut)
-BEGIN_AT="${1:-2025-01-01}"
+BEGIN_AT="${1:-2024-02-19}"
 
-# Credentials (⚠️ ne pas publier en clair en prod)
+
+# Credentials (⚠️ ne pas publier en clair en production)
 CLIENT_ID="u-s4t2af-23f031abd5ab1c7afcd6b43148ddd70b2ae20692602fb8c142f94fabb55b5373"
 CLIENT_SECRET="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"
 
@@ -47,7 +49,10 @@ get_token() {
         -d "grant_type=client_credentials&scope=public projects profile tig elearning forum")
 
     ACCESS_TOKEN=$(echo "$token_response" | jq -r '.access_token')
-    [[ -z "$ACCESS_TOKEN" || "$ACCESS_TOKEN" == "null" ]] && { echo "Erreur : impossible d'obtenir le token."; exit 1; }
+    [[ -z "$ACCESS_TOKEN" || "$ACCESS_TOKEN" == "null" ]] && {
+        echo "Erreur : impossible d'obtenir le token." | tee -a "$LOG_FILE"
+        exit 1
+    }
 }
 get_token
 
@@ -69,7 +74,7 @@ else
 fi
 
 echo "📊 Total utilisateurs : $TOTAL_USERS"
-echo "📅 Période : $BEGIN_AT"
+echo "📅 Période : $BEGIN_AT → $END_AT"
 echo "💡 Appuyez sur Ctrl+C pour sauvegarder et arrêter"
 
 # ========================
@@ -84,24 +89,30 @@ fetch_user_stats() {
     for (( attempt=1; attempt<=retries; attempt++ )); do
         response=$(curl -s --max-time 20 -H "Authorization: Bearer $ACCESS_TOKEN" "$url" -w "\nHTTP_CODE:%{http_code}")
         http_code=$(echo "$response" | grep -o "HTTP_CODE:[0-9]*" | cut -d: -f2)
-        body=$(echo "$response" | sed 's/HTTP_CODE:[0-9]*$//')
+        body=$(echo "$response" | sed 's/HTTP_CODE:[0-9]*$//' | tr -d '\r')
 
         if [[ "$http_code" -eq 200 ]]; then
-            echo "$(jq -n --arg id "$user_id" --argjson stats "$body" '{user_id: $id, stats: $stats}')"
+            # Vérifier si le corps est un JSON valide
+            if echo "$body" | jq empty >/dev/null 2>&1; then
+                echo "$(jq -n --arg id "$user_id" --argjson stats "$body" '{user_id: $id, stats: $stats}')"
+            else
+                echo "⚠️ Corps invalide pour $user_id, remplacé par objet vide" | tee -a "$LOG_FILE"
+                echo "$(jq -n --arg id "$user_id" '{user_id: $id, stats: []}')"
+            fi
             return
         elif [[ "$http_code" -eq 401 ]]; then
-            echo "⚠️ Token expiré pour $user_id, régénération..."
+            echo "⚠️ Token expiré pour $user_id, régénération..." | tee -a "$LOG_FILE"
             get_token
         elif [[ "$http_code" -eq 000 ]]; then
-            echo "⚠️ Timeout réseau pour $user_id (tentative $attempt/$retries)"
+            echo "⚠️ Timeout réseau pour $user_id (tentative $attempt/$retries)" | tee -a "$LOG_FILE"
         else
-            echo "❌ Erreur HTTP $http_code pour $user_id (tentative $attempt/$retries)"
+            echo "❌ Erreur HTTP $http_code pour $user_id (tentative $attempt/$retries)" | tee -a "$LOG_FILE"
         fi
 
         sleep $delay
     done
 
-    echo "{}"  # en cas d'échec après retry
+    echo "$(jq -n --arg id "$user_id" '{user_id: $id, stats: []}')"
 }
 
 # ========================
@@ -111,9 +122,15 @@ add_and_save_entry() {
     local entry="$1"
     local user_id="$2"
     local tmp="/tmp/temp_checkpoint_$$.json"
-    jq --argjson new_entry "$entry" '. + [$new_entry]' "$CHECKPOINT_FILE" > "$tmp" && mv "$tmp" "$CHECKPOINT_FILE"
-    echo "$user_id" >> "$PROGRESS_FILE"
-    cp "$CHECKPOINT_FILE" "$OUTPUT_FILE"
+
+    # Validation du JSON avant sauvegarde
+    if echo "$entry" | jq empty >/dev/null 2>&1; then
+        jq --argjson new_entry "$entry" '. + [$new_entry]' "$CHECKPOINT_FILE" > "$tmp" && mv "$tmp" "$CHECKPOINT_FILE"
+        echo "$user_id" >> "$PROGRESS_FILE"
+        cp "$CHECKPOINT_FILE" "$OUTPUT_FILE"
+    else
+        echo "⚠️ Entrée invalide ignorée pour $user_id" | tee -a "$LOG_FILE"
+    fi
 }
 
 # ========================
