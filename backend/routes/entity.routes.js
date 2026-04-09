@@ -2,19 +2,19 @@ const express = require('express');
 const router = express.Router();
 const entityController = require('../controllers/entity.controller');
 
-// Create an entity
+// Create 
 router.post('/', entityController.createEntity);
 
-// Get all entities
+// Get 
 router.get('/', entityController.getAllEntities);
 
-// Get entity by ID
+// Get 
 router.get('/:id', entityController.getEntityById);
 
-// Update an entity
+// Update 
 router.put('/:id', entityController.updateEntity);
 
-// Delete an entity
+// Delete 
 router.delete('/:id', entityController.deleteEntity);
 
 module.exports = router;

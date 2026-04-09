@@ -1,7 +1,7 @@
 const pool = require('../db');
 const bcrypt = require('bcryptjs');
 
-// Create a user
+// Create
 exports.createUser = async (req, res) => {
   const { username, email, password } = req.body;
   if (!username || !email || !password) {
@@ -17,14 +17,14 @@ exports.createUser = async (req, res) => {
     res.status(201).json(result.rows[0]);
   } catch (err) {
     console.error(err);
-    if (err.code === '23505') { // Unique violation
+    if (err.code === '23505') { 
         return res.status(409).json({ error: 'User with this username or email already exists.' });
     }
     res.status(500).json({ error: 'Server error' });
   }
 };
 
-// Get all users
+// Get all
 exports.getAllUsers = async (req, res) => {
   try {
     const result = await pool.query('SELECT id, username, email, created_at FROM "user"');
@@ -35,7 +35,7 @@ exports.getAllUsers = async (req, res) => {
   }
 };
 
-// Get user by ID
+// Get  by ID
 exports.getUserById = async (req, res) => {
   const { id } = req.params;
   try {
@@ -50,7 +50,7 @@ exports.getUserById = async (req, res) => {
   }
 };
 
-// Update a user
+// Update
 exports.updateUser = async (req, res) => {
   const { id } = req.params;
   const { username, email, password } = req.body;
@@ -85,7 +85,7 @@ exports.updateUser = async (req, res) => {
     }
 
     updateFields.push(`updated_at = CURRENT_TIMESTAMP`);
-    queryParams.push(id); // ID is the last parameter
+    queryParams.push(id); 
 
     const query = `UPDATE "user" SET ${updateFields.join(', ')} WHERE id = $${paramCount} RETURNING id, username, email, created_at`;
     const result = await pool.query(query, queryParams);
@@ -93,14 +93,14 @@ exports.updateUser = async (req, res) => {
     res.status(200).json(result.rows[0]);
   } catch (err) {
     console.error(err);
-    if (err.code === '23505') { // Unique violation
+    if (err.code === '23505') { 
         return res.status(409).json({ error: 'User with this username or email already exists.' });
     }
     res.status(500).json({ error: 'Server error' });
   }
 };
 
-// Delete a user
+// Delete
 exports.deleteUser = async (req, res) => {
   const { id } = req.params;
   try {
@@ -108,7 +108,7 @@ exports.deleteUser = async (req, res) => {
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'User not found' });
     }
-    res.status(204).send(); // No content for successful deletion
+    res.status(204).send(); 
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });

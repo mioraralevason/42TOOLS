@@ -1,0 +1,33 @@
+<div class="container">
+  <h1>Liste des Entités</h1>
+  
+  <a routerLink="/entities/create" class="btn btn-primary">Créer une entité</a>
+
+  <div *ngIf="error" class="error">{{ error }}</div>
+
+  <table *ngIf="entities.length > 0" class="table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Nom</th>
+        <th>Créé le</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let entity of entities">
+        <td>{{ entity.id }}</td>
+        <td>{{ entity.name }}</td>
+        <td>{{ entity.created_at | date:'dd/MM/yyyy HH:mm' }}</td>
+        <td class="actions">
+          <a [routerLink]="['/entities', entity.id, 'edit']" class="btn btn-small btn-warning">Modifier</a>
+          <button (click)="deleteEntity(entity.id)" class="btn btn-small btn-danger">Supprimer</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div *ngIf="entities.length === 0" class="no-data">
+    Aucune entité trouvée
+  </div>
+</div>

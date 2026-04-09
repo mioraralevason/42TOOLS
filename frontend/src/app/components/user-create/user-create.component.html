@@ -1,0 +1,53 @@
+<div class="container">
+  <h1>Créer un Utilisateur</h1>
+
+  <div *ngIf="error" class="error">{{ error }}</div>
+
+  <form (ngSubmit)="createUser()" class="form">
+    <div class="form-group">
+      <label for="username">Nom d'utilisateur :</label>
+      <input 
+        type="text" 
+        id="username" 
+        [(ngModel)]="username" 
+        name="username" 
+        required 
+        placeholder="Entrez le nom d'utilisateur"
+        class="form-control"
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="email">Email :</label>
+      <input 
+        type="email" 
+        id="email" 
+        [(ngModel)]="email" 
+        name="email" 
+        required 
+        placeholder="Entrez l'email"
+        class="form-control"
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="password">Mot de passe :</label>
+      <input 
+        type="password" 
+        id="password" 
+        [(ngModel)]="password" 
+        name="password" 
+        required 
+        placeholder="Entrez le mot de passe"
+        class="form-control"
+      />
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" [disabled]="loading" class="btn btn-primary">
+        {{ loading ? 'Création...' : 'Créer' }}
+      </button>
+      <a routerLink="/users" class="btn btn-secondary">Annuler</a>
+    </div>
+  </form>
+</div>

@@ -1,6 +1,6 @@
 const pool = require('../db');
 
-// Create an entity
+// Create 
 exports.createEntity = async (req, res) => {
   const { name } = req.body;
   if (!name) {
@@ -18,7 +18,7 @@ exports.createEntity = async (req, res) => {
   }
 };
 
-// Get all entities
+// Get all
 exports.getAllEntities = async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM entity');
@@ -29,7 +29,7 @@ exports.getAllEntities = async (req, res) => {
   }
 };
 
-// Get entity by ID
+// Get by ID
 exports.getEntityById = async (req, res) => {
   const { id } = req.params;
   try {
@@ -44,7 +44,7 @@ exports.getEntityById = async (req, res) => {
   }
 };
 
-// Update an entity
+// Update 
 exports.updateEntity = async (req, res) => {
   const { id } = req.params;
   const { name } = req.body;
@@ -66,7 +66,7 @@ exports.updateEntity = async (req, res) => {
   }
 };
 
-// Delete an entity
+// Delete 
 exports.deleteEntity = async (req, res) => {
   const { id } = req.params;
   try {
@@ -74,7 +74,7 @@ exports.deleteEntity = async (req, res) => {
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Entity not found' });
     }
-    res.status(204).send(); // No content for successful deletion
+    res.status(204).send();
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });

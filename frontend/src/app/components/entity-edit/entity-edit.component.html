@@ -1,0 +1,29 @@
+<div class="container">
+  <h1>Modifier l'Entité</h1>
+
+  <div *ngIf="loading" class="loading">Chargement...</div>
+  
+  <div *ngIf="error" class="error">{{ error }}</div>
+
+  <form *ngIf="!loading" (ngSubmit)="updateEntity()" class="form">
+    <div class="form-group">
+      <label for="name">Nom :</label>
+      <input 
+        type="text" 
+        id="name" 
+        [(ngModel)]="name" 
+        name="name" 
+        required 
+        placeholder="Entrez le nom de l'entité"
+        class="form-control"
+      />
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" [disabled]="loading" class="btn btn-primary">
+        {{ loading ? 'Modification...' : 'Modifier' }}
+      </button>
+      <a routerLink="/entities" class="btn btn-secondary">Annuler</a>
+    </div>
+  </form>
+</div>

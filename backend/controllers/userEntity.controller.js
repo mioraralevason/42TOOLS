@@ -1,6 +1,6 @@
 const pool = require('../db');
 
-// Associate an entity to a user
+// Associate 
 exports.createUserEntity = async (req, res) => {
   const { userId, entityId } = req.body;
   if (!userId || !entityId) {
@@ -14,17 +14,17 @@ exports.createUserEntity = async (req, res) => {
     res.status(201).json(result.rows[0]);
   } catch (err) {
     console.error(err);
-    if (err.code === '23505') { // Unique violation
+    if (err.code === '23505') { 
         return res.status(409).json({ error: 'This user-entity association already exists.' });
     }
-    if (err.code === '23503') { // Foreign key violation
+    if (err.code === '23503') {
         return res.status(404).json({ error: 'User or Entity not found.' });
     }
     res.status(500).json({ error: 'Server error' });
   }
 };
 
-// Get all associations
+// Get all
 exports.getAllUserEntities = async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM user_entity');
@@ -35,7 +35,7 @@ exports.getAllUserEntities = async (req, res) => {
   }
 };
 
-// Get association by ID
+// Get by ID
 exports.getUserEntityById = async (req, res) => {
   const { id } = req.params;
   try {
@@ -50,10 +50,10 @@ exports.getUserEntityById = async (req, res) => {
   }
 };
 
-// Update an association
+// Update
 exports.updateUserEntity = async (req, res) => {
     const { id } = req.params;
-    const { userId, entityId } = req.body; // Allow partial updates
+    const { userId, entityId } = req.body; 
     
     if (!userId && !entityId) {
         return res.status(400).json({ error: 'At least one of userId or entityId must be provided for update.' });
@@ -73,7 +73,7 @@ exports.updateUserEntity = async (req, res) => {
     }
 
     updateFields.push(`updated_at = CURRENT_TIMESTAMP`);
-    queryParams.push(id); // ID is the last parameter
+    queryParams.push(id); 
 
     try {
         const query = `UPDATE user_entity SET ${updateFields.join(', ')} WHERE id = $${paramCount} RETURNING *`;
@@ -86,10 +86,10 @@ exports.updateUserEntity = async (req, res) => {
 
     } catch (err) {
         console.error(err);
-        if (err.code === '23505') { // Unique violation
+        if (err.code === '23505') { 
             return res.status(409).json({ error: 'This user-entity association already exists.' });
         }
-        if (err.code === '23503') { // Foreign key violation
+        if (err.code === '23503') { 
             return res.status(404).json({ error: 'User or Entity not found.' });
         }
         res.status(500).json({ error: 'Server error' });
@@ -97,7 +97,7 @@ exports.updateUserEntity = async (req, res) => {
 };
 
 
-// Delete an association
+// Delete
 exports.deleteUserEntity = async (req, res) => {
   const { id } = req.params;
   try {
@@ -105,7 +105,7 @@ exports.deleteUserEntity = async (req, res) => {
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'User-Entity association not found' });
     }
-    res.status(204).send(); // No content for successful deletion
+    res.status(204).send(); 
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });

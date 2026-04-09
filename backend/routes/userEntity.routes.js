@@ -2,19 +2,19 @@ const express = require('express');
 const router = express.Router();
 const userEntityController = require('../controllers/userEntity.controller');
 
-// Associate an entity to a user
+
 router.post('/', userEntityController.createUserEntity);
 
-// Get all associations
+// Get All
 router.get('/', userEntityController.getAllUserEntities);
 
-// Get association by ID
+// Getby ID
 router.get('/:id', userEntityController.getUserEntityById);
 
-// Update an association
+// Update an asso
 router.put('/:id', userEntityController.updateUserEntity);
 
-// Delete an association
+// Delete 
 router.delete('/:id', userEntityController.deleteUserEntity);
 
 module.exports = router;

@@ -1,59 +1,116 @@
-# Frontend
+# 42TOOLS Frontend - Angular Application
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.7.
+Application Angular pour la gestion des entités, utilisateurs et leurs associations.
 
-## Development server
+## Structure du projet
 
-To start a local development server, run:
+```
+frontend/
+├── src/
+│   ├── app/
+│   │   ├── models/              # Interfaces TypeScript
+│   │   │   ├── entity.model.ts
+│   │   │   ├── user.model.ts
+│   │   │   └── user-entity.model.ts
+│   │   ├── services/            # Services pour les appels API
+│   │   │   ├── entity.service.ts
+│   │   │   ├── user.service.ts
+│   │   │   └── user-entity.service.ts
+│   │   ├── components/          # Components Angular
+│   │   │   ├── navbar/
+│   │   │   ├── entity-list/
+│   │   │   ├── entity-create/
+│   │   │   ├── entity-edit/
+│   │   │   ├── entity-detail/
+│   │   │   ├── user-list/
+│   │   │   ├── user-create/
+│   │   │   ├── user-edit/
+│   │   │   ├── user-detail/
+│   │   │   ├── user-entity-list/
+│   │   │   ├── user-entity-create/
+│   │   │   └── user-entity-edit/
+│   │   ├── app.routes.ts        # Configuration des routes
+│   │   ├── app.config.ts        # Configuration de l'application
+│   │   └── app.ts               # Component principal
+│   └── styles.css               # Styles globaux
+```
+
+## Fonctionnalités
+
+### 1. CRUD pour les Entités
+- **Lister** toutes les entités : `GET /entities`
+- **Créer** une entité : `POST /entities`
+- **Voir** une entité : `GET /entities/:id`
+- **Modifier** une entité : `PUT /entities/:id`
+- **Supprimer** une entité : `DELETE /entities/:id`
+
+### 2. CRUD pour les Utilisateurs
+- **Lister** tous les utilisateurs : `GET /users`
+- **Créer** un utilisateur : `POST /users`
+- **Voir** un utilisateur : `GET /users/:id`
+- **Modifier** un utilisateur : `PUT /users/:id`
+- **Supprimer** un utilisateur : `DELETE /users/:id`
+
+### 3. CRUD pour les Associations User-Entity
+- **Lister** toutes les associations : `GET /user-entities`
+- **Créer** une association : `POST /user-entities`
+- **Modifier** une association : `PUT /user-entities/:id`
+- **Supprimer** une association : `DELETE /user-entities/:id`
+
+## Installation et démarrage
+
+### Prérequis
+- Node.js (v18+)
+- npm ou yarn
+- Backend 42TOOLS démarré sur `http://localhost:5000`
+
+### Commands
 
 ```bash
+# Installer les dépendances
+npm install
+
+# Démarrer en mode développement
 ng serve
-```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
-
-```bash
+# Construire pour la production
 ng build
+
+# Démarrer le serveur de développement
+npm start
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+L'application sera accessible sur `http://localhost:4200`
 
-## Running unit tests
+## Configuration
 
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+Le fichier `app.config.ts` configure :
+- Le routing avec `provideRouter`
+- HttpClient avec `provideHttpClient`
+- Le SSR avec `provideClientHydration`
 
-```bash
-ng test
-```
+## Architecture
 
-## Running end-to-end tests
+### Services
+Chaque service utilise `HttpClient` pour communiquer avec le backend :
+- `EntityService` : Gestion des entités
+- `UserService` : Gestion des utilisateurs
+- `UserEntityService` : Gestion des associations
 
-For end-to-end (e2e) testing, run:
+### Components
+Tous les components sont **standalone** (Angular 14+) et utilisent :
+- `CommonModule` pour les directives communes
+- `RouterModule` pour la navigation
+- `FormsModule` pour les formulaires
 
-```bash
-ng e2e
-```
+### Routing
+Le routing est configuré dans `app.routes.ts` avec :
+- Route par défaut vers `/entities`
+- Routes CRUD pour chaque entité
+- Gestion des routes inconnues
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+## Notes
 
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+- L'URL du backend est configurée dans chaque service (`http://localhost:5000`)
+- Les components utilisent des formulaires template-driven avec `ngModel`
+- La navigation se fait via `RouterModule` et `routerLink`
